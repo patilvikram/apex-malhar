@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.window.TriggerOption;
 import org.apache.apex.malhar.lib.window.WindowOption;
@@ -111,6 +113,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
 
   }
 
+  private static final Logger LOG = LoggerFactory.getLogger(ApexStreamImpl.class);
   /**
    * The extension point of the stream
    *
@@ -199,6 +202,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   }
 
 
+
   @Override
   public <O, STREAM extends ApexStream<O>> STREAM flatMap(FlatMapFunction<T, O> flatten, Option... opts)
   {
@@ -233,7 +237,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     checkArguments(op, inputPort, outputPort);
 
     DagMeta.NodeMeta nm = null;
-
+    LOG.error("Adding an operator" + opts);
     if (lastBrick == null) {
       nm = graph.addNode(op, null, null, inputPort, opts);
     } else {
@@ -318,6 +322,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   @SuppressWarnings("unchecked")
   public ApexStreamImpl<T> print()
   {
+    LOG.error("Adding console operator");
     ConsoleOutputOperator consoleOutputOperator = new ConsoleOutputOperator();
     addOperator(consoleOutputOperator,
         (Operator.InputPort<T>)consoleOutputOperator.input, null, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(consoleOutputOperator.getClass())));
@@ -473,6 +478,15 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     windowedStream.triggerOption = triggerOption;
     windowedStream.allowedLateness = allowLateness;
     return windowedStream;
+  }
+
+  @Override
+  public ApexStreamImpl<T> map_func(byte[] serializedFunction)
+  {
+    LOG.error("Adding Python generic  operator");
+    PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
+    return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(operator.getClass())));
+
   }
 
   protected <O> ApexStream<O> newStream(DagMeta graph, Brick<O> newBrick)

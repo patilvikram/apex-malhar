@@ -1,0 +1,12 @@
+package org.apache.apex.malhar.stream.api.python;
+
+/**
+ * Created by vikram on 3/3/17.
+ */
+public interface PythonWorker<T>
+{
+
+  public void setFunction(Object func);
+
+  public Object execute(T tuple);
+}

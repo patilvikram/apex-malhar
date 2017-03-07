@@ -212,4 +212,12 @@ public interface ApexStream<T>
    */
   WindowedStream<T> window(WindowOption windowOption, TriggerOption triggerOption, Duration allowLateness);
 
+
+  /**
+   * Extend the dag by adding one end operator<br>
+   * @param serializedFunction stores Serialized Function data
+   * @return new stream of type T
+   */
+  // Before calling this method call check if its function object
+  <STREAM extends ApexStream<T>>  STREAM map_func(byte[] serializedFunction);
 }
