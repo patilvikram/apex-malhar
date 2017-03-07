@@ -7,7 +7,15 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+<<<<<<< HEAD
+<<<<<<< HEAD
+ *  http://www.apache.org/licenses/LICENSE-2.0
+=======
+ * http://www.apache.org/licenses/LICENSE-2.0
+>>>>>>> f9250d8... Reformatted code
+=======
+ *  http://www.apache.org/licenses/LICENSE-2.0
+>>>>>>> e4d3bf9... Fixed style related changes
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -28,6 +36,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.function.Function;
 import org.apache.apex.malhar.lib.function.Function.FlatMapFunction;
@@ -111,6 +121,8 @@ public class ApexStreamImpl<T> implements ApexStream<T>
 
   }
 
+  private static final Logger LOG = LoggerFactory.getLogger(ApexStreamImpl.class);
+
   /**
    * The extension point of the stream
    *
@@ -144,8 +156,8 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     {
       return lastStream;
     }
-  }
 
+  }
 
   /**
    * Graph behind the stream
@@ -319,8 +331,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   public ApexStreamImpl<T> print()
   {
     ConsoleOutputOperator consoleOutputOperator = new ConsoleOutputOperator();
-    addOperator(consoleOutputOperator,
-        (Operator.InputPort<T>)consoleOutputOperator.input, null, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(consoleOutputOperator.getClass())));
+    addOperator(consoleOutputOperator, (Operator.InputPort<T>)consoleOutputOperator.input, null, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(consoleOutputOperator.getClass())));
     return this;
   }
 
@@ -422,7 +433,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   }
 
   @Override
-  public void runEmbedded(boolean async, long duration, Callable<Boolean> exitCondition)
+  public LocalMode.Controller runEmbedded(boolean async, long duration, Callable<Boolean> exitCondition)
   {
     LocalMode lma = LocalMode.newInstance();
     populateDag(lma.getDAG());
@@ -440,6 +451,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
         lc.run();
       }
     }
+    return lc;
 
   }
 

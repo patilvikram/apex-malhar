@@ -21,6 +21,7 @@ package org.apache.apex.malhar.stream.api.impl;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -85,6 +86,7 @@ public class ApexStreamImplTest
       for (InputPortMeta inputPortMeta : portMetaCollection) {
         Assert.assertEquals("second", inputPortMeta.getOperatorMeta().getName());
       }
+
 
       // Assert the stream is thread local
       Assert.assertTrue(stream.getLocality() == DAG.Locality.THREAD_LOCAL);
