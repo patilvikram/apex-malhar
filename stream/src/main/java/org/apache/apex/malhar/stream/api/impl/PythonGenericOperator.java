@@ -1,6 +1,8 @@
 package org.apache.apex.malhar.stream.api.impl;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +54,22 @@ public class PythonGenericOperator<T> extends BaseOperator
     server = new GatewayServer(pythonWorkerProxy, port);
     LOG.info("Port number" + port);
     LOG.error("Port number" + port);
-    py4jListener = new PythonGatewayServerListenser(server, this.pyProcess);
+    py4jListener = new PythonGatewayServerListenser(server);
     server.addListener(py4jListener);
     server.start(true);
 
-//    this.startPythonWorker(server.getPort());
+    int pythonServerStartAttempts = 5;
+    while (py4jListener.isPythonServerStarted() && pythonServerStartAttempts > 0) {
+      try {
+        Thread.sleep(5000);
+        pythonServerStartAttempts--;
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    if (py4jListener.isPythonServerStarted()) {
+      LOG.error("Python server could not be started");
+    }
 
   }
 
@@ -87,12 +100,17 @@ public class PythonGenericOperator<T> extends BaseOperator
     private GatewayServer server = null;
     private Process pyProcess = null;
 
-    public PythonGatewayServerListenser(GatewayServer startedServer, Process pyProcess)
+    public boolean isPythonServerStarted()
+    {
+      return pythonServerStarted;
+    }
+
+    private boolean pythonServerStarted = false;
+
+    public PythonGatewayServerListenser(GatewayServer startedServer)
     {
 
       this.server = startedServer;
-      this.pyProcess = pyProcess;
-
     }
 
     @Override
@@ -135,6 +153,9 @@ public class PythonGenericOperator<T> extends BaseOperator
     public void serverStarted()
     {
       LOG.info("Gateway server started");
+
+      this.startPythonWorker(server.getPort());
+
     }
 
     @Override
@@ -142,23 +163,42 @@ public class PythonGenericOperator<T> extends BaseOperator
     {
       LOG.info("Gateway server stopped");
     }
-  }
 
-  private void startPythonWorker(int gatewayServerPort)
-  {
+    private void startPythonWorker(int gatewayServerPort)
+    {
 
-    ProcessBuilder pb = new ProcessBuilder("python", "/home/vikram/Documents/src/PyApex/OperatorWorker.py", "" + gatewayServerPort);
-    try {
-      LOG.info("STARTING python worker process");
-      this.pyProcess = pb.start();
+      ProcessBuilder pb = new ProcessBuilder("/usr/bin/python", "/home/vikram/Documents/src/apex-malhar/python/scripts/OperatorWorker.py", "" + gatewayServerPort);
+      try {
+        LOG.info("STARTING python worker process");
+        this.pyProcess = pb.start();
+        this.pythonServerStarted = true;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(this.pyProcess.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+          LOG.info("From python" + line);
+        }
 
-      LOG.info("Python worker started  Exit Value: ");
+        BufferedReader errorReader = new BufferedReader(new InputStreamReader(this.pyProcess.getErrorStream()));
+        String errorLine;
+        while ((errorLine = errorReader.readLine()) != null) {
+          LOG.info("Erorr from  python" + errorLine);
+        }
+
+        this.pyProcess.waitFor();
+        // create a thread which will keep logging output stream data
+//      InputStream pyProcessOutputstream = this.pyProcess.getInputStream();
+        LOG.info("Python worker started ");
 //        return this.pyProcess;
-    } catch (IOException e) {
-      e.printStackTrace();
-      LOG.error("FAILED TO START PYTHON SERVER");
+      } catch (IOException e) {
+        e.printStackTrace();
+        LOG.error("FAILED TO START PYTHON SERVER");
+
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
 
     }
 
   }
+
 }
