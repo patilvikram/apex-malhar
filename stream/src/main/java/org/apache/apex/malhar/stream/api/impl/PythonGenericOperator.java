@@ -1,8 +1,7 @@
 package org.apache.apex.malhar.stream.api.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,21 +169,27 @@ public class PythonGenericOperator<T> extends BaseOperator
       ProcessBuilder pb = new ProcessBuilder("/usr/bin/python", "/home/vikram/Documents/src/apex-malhar/python/scripts/OperatorWorker.py", "" + gatewayServerPort);
       try {
         LOG.info("STARTING python worker process");
+        Map<String, String> pbEnv = pb.environment();
+          pbEnv.put("PYTHONPATH", "/home/vikram/.local/lib/python2.7/site-packages");
+        pb.inheritIO();
         this.pyProcess = pb.start();
         this.pythonServerStarted = true;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(this.pyProcess.getInputStream()));
-        String line;
-        while ((line = reader.readLine()) != null) {
-          LOG.info("From python" + line);
-        }
 
-        BufferedReader errorReader = new BufferedReader(new InputStreamReader(this.pyProcess.getErrorStream()));
-        String errorLine;
-        while ((errorLine = errorReader.readLine()) != null) {
-          LOG.info("Erorr from  python" + errorLine);
-        }
 
-        this.pyProcess.waitFor();
+
+//        pb.redirectOutput(Redirect.INHERIT);
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(this.pyProcess.getInputStream()));
+//        String line;
+//        while ((line = reader.readLine()) != null) {
+//          LOG.info("From python output" + line);
+//        }
+//
+//        BufferedReader errorReader = new BufferedReader(new InputStreamReader(this.pyProcess.getErrorStream()));
+//        String errorLine;
+//        while ((errorLine = errorReader.readLine()) != null) {
+//          LOG.info("Erorr from  python" + errorLine);
+//        }
+
         // create a thread which will keep logging output stream data
 //      InputStream pyProcessOutputstream = this.pyProcess.getInputStream();
         LOG.info("Python worker started ");
@@ -193,8 +198,6 @@ public class PythonGenericOperator<T> extends BaseOperator
         e.printStackTrace();
         LOG.error("FAILED TO START PYTHON SERVER");
 
-      } catch (InterruptedException e) {
-        e.printStackTrace();
       }
 
     }

@@ -1,6 +1,7 @@
 import sys
-from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters
 import pickle
+import pip
+from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters
 
 class WorkerImpl(object):
 
@@ -31,3 +32,4 @@ def main(argv):
    
 if __name__ == "__main__":
     main(sys.argv[1:])
+
