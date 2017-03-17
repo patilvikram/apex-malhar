@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,14 +18,19 @@
  */
 package org.apache.apex.python;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.stream.api.ApexStream;
+import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
@@ -66,11 +71,16 @@ public class PythonApp implements StreamingApplication
 
   public void populateDAG(DAG dag, Configuration conf)
   {
+
+    // add SERIALIZED CODE TO LIB JARS
+    // add Worker.py
     LOG.error("Populating DAG in python app");
     this.apexStream.populateDag(dag);
     String existingJars = dag.getValue(dag.LIBRARY_JARS);
     existingJars = StringUtils.isNotEmpty(existingJars) ? existingJars + "," : "";
-    dag.setAttribute(dag.LIBRARY_JARS, existingJars + "/home/vikram/.m2/repository/net/sf/py4j/py4j/0.8.1/py4j-0.8.1.jar");
+    existingJars= existingJars + "/home/vikram/.m2/repository/net/sf/py4j/py4j/0.8.1/py4j-0.8.1.jar";
+//    existingJars= existingJars +","+ "/home/vikram/Documents/py4j-0.10.4.tar.gz";
+    dag.setAttribute(dag.LIBRARY_JARS, existingJars );
     LOG.error("DAG VALUE LIBRARY JARS" + dag.getValue(DAG.LIBRARY_JARS));
   }
 
@@ -92,10 +102,15 @@ public class PythonApp implements StreamingApplication
     return streamFactory;
   }
 
-  public String launch()
+
+  public String launch() throws Exception
   {
+    LOG.error("Launching app in python app");
+    String APEX_DIRECTORY_PATH=System.getenv("APEX_HOME");
     StramAppLauncher appLauncher = null;
-    try {
+      Configuration configuration = this.getConf();
+      configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME,APEX_DIRECTORY_PATH+"/runtime/py4j-0.10.4.tar.gz");
+
       appLauncher = new StramAppLauncher(getName(), getConf());
       appLauncher.loadDependencies();
 
@@ -104,10 +119,6 @@ public class PythonApp implements StreamingApplication
       this.appId = appLauncher.launchApp(appFactory);
       return appId.toString();
 
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
 
   }
 
@@ -122,4 +133,48 @@ public class PythonApp implements StreamingApplication
 
   }
 
+  public PythonApp fromFolder(String directoryPath ){
+    apexStream = StreamFactory.fromFolder(directoryPath);
+    return this;
+  }
+
+
+  public PythonApp fromKafka08(String zookeepers,String topic){
+    apexStream = StreamFactory.fromKafka08(zookeepers,topic);
+    return this;
+  }
+
+  public PythonApp fromKafka09(String zookeepers,String topic){
+    apexStream = StreamFactory.fromKafka09(zookeepers,topic);
+    return this;
+  }
+
+  public PythonApp setMap(String name, byte[] searializedFunction ){
+    apexStream = apexStream.map_func( searializedFunction, Option.Options.name(name));
+    return this;
+  }
+
+  public PythonApp setFlatMap(String name,byte[] searializedFunction ){
+    apexStream = apexStream.map_func( searializedFunction, Option.Options.name(name));
+    return this;
+  }
+
+  public PythonApp toConsole(String name){
+    apexStream = apexStream.print(Option.Options.name(name));
+    return this;
+  }
+
+  public PythonApp setConfig(String key,String value){
+    getConf().set(key,value);
+    return this;
+  }
+
+  public void kill() throws IOException, YarnException
+  {
+    YarnClient yarnClient = YarnClient.createYarnClient();
+    yarnClient.init(this.conf);
+    yarnClient.start();
+    yarnClient.killApplication(appId);
+    yarnClient.stop();
+  }
 }

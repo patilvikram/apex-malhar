@@ -101,7 +101,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     INPUT_ATTRIBUTES.add(Context.PortContext.STREAM_CODEC);
     INPUT_ATTRIBUTES.add(Context.PortContext.TUPLE_CLASS);
 
-
     OUTPUT_ATTRIBUTES.add(Context.PortContext.QUEUE_CAPACITY);
     OUTPUT_ATTRIBUTES.add(Context.PortContext.BUFFER_MEMORY_MB);
     OUTPUT_ATTRIBUTES.add(Context.PortContext.SPIN_MILLIS);
@@ -114,6 +113,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(ApexStreamImpl.class);
+
   /**
    * The extension point of the stream
    *
@@ -148,7 +148,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
       return lastStream;
     }
   }
-
 
   /**
    * Graph behind the stream
@@ -201,8 +200,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     return addOperator(opt, opt.input, opt.output, opts);
   }
 
-
-
   @Override
   public <O, STREAM extends ApexStream<O>> STREAM flatMap(FlatMapFunction<T, O> flatten, Option... opts)
   {
@@ -231,7 +228,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
 
   @Override
   @SuppressWarnings("unchecked")
-  public  <O, STREAM extends ApexStream<O>> STREAM addOperator(Operator op, Operator.InputPort<T> inputPort, Operator.OutputPort<O> outputPort, Option... opts)
+  public <O, STREAM extends ApexStream<O>> STREAM addOperator(Operator op, Operator.InputPort<T> inputPort, Operator.OutputPort<O> outputPort, Option... opts)
   {
 
     checkArguments(op, inputPort, outputPort);
@@ -268,7 +265,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   {
     return compositeStreamTransform.compose((INSTREAM)this);
   }
-
 
   /* Check to see if inputPort and outputPort belongs to the operator */
   private void checkArguments(Operator op, Operator.InputPort inputPort, Operator.OutputPort outputPort)
@@ -324,8 +320,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   {
     LOG.error("Adding console operator");
     ConsoleOutputOperator consoleOutputOperator = new ConsoleOutputOperator();
-    addOperator(consoleOutputOperator,
-        (Operator.InputPort<T>)consoleOutputOperator.input, null, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(consoleOutputOperator.getClass())));
+    addOperator(consoleOutputOperator, (Operator.InputPort<T>)consoleOutputOperator.input, null, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(consoleOutputOperator.getClass())));
     return this;
   }
 
@@ -411,7 +406,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     return this;
   }
 
-
   @Override
   public DAG createDag()
   {
@@ -448,7 +442,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
 
   }
 
-
   @Override
   public void run()
   {
@@ -481,11 +474,11 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   }
 
   @Override
-  public ApexStreamImpl<T> map_func(byte[] serializedFunction)
+  public ApexStreamImpl<T> map_func(byte[] serializedFunction, Option... opts)
   {
     LOG.error("Adding Python generic  operator");
     PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
-    return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(operator.getClass())));
+    return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
   }
 

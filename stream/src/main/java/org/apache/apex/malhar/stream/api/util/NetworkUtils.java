@@ -16,15 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.stream.api.python;
 
-/**
- * Created by vikram on 3/3/17.
- */
-public interface PythonWorker<T>
+package org.apache.apex.malhar.stream.api.util;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+
+import com.google.common.base.Throwables;
+
+
+public class NetworkUtils
 {
 
-  public void setFunction(Object func);
+  public static int findAvaliablePort(){
+    // Find port
+    int foundPort = -1;
+    try {
+      ServerSocket serverSocket = new ServerSocket(0);
+      foundPort = serverSocket.getLocalPort();
+      serverSocket.close();
+      return foundPort;
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
 
-  public Object execute(T tuple);
+  }
 }

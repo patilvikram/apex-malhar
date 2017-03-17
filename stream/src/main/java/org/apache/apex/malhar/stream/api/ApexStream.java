@@ -77,7 +77,7 @@ public interface ApexStream<T>
    * @param <O> type of the output
    * @return new stream of type O
    */
-  <O, STREAM extends ApexStream<O>> STREAM addOperator(Operator op, Operator.InputPort<T> inputPort,  Operator.OutputPort<O> outputPort, Option... opts);
+  <O, STREAM extends ApexStream<O>> STREAM addOperator(Operator op, Operator.InputPort<T> inputPort, Operator.OutputPort<O> outputPort, Option... opts);
 
   /**
    * Extend the dag by adding one end operator<br>
@@ -156,7 +156,6 @@ public interface ApexStream<T>
    */
   <STREAM extends ApexStream<T>> STREAM with(String propName, Object value);
 
-
   /**
    * Create dag from stream
    * @return {@see DAG}
@@ -169,7 +168,6 @@ public interface ApexStream<T>
    */
   void populateDag(DAG dag);
 
-
   /**
    * Run the stream application in local mode
    * In Async mode, the method would return immediately and the dag would run for "duration" milliseconds
@@ -179,7 +177,6 @@ public interface ApexStream<T>
    *              false if run in sync mode
    */
   void runEmbedded(boolean async, long duration, Callable<Boolean> exitCondition);
-
 
   /**
    * Submit the application to cluster
@@ -212,12 +209,11 @@ public interface ApexStream<T>
    */
   WindowedStream<T> window(WindowOption windowOption, TriggerOption triggerOption, Duration allowLateness);
 
-
   /**
    * Extend the dag by adding one end operator<br>
    * @param serializedFunction stores Serialized Function data
    * @return new stream of type T
    */
   // Before calling this method call check if its function object
-  <STREAM extends ApexStream<T>>  STREAM map_func(byte[] serializedFunction);
+  <STREAM extends ApexStream<T>> STREAM map_func(byte[] serializedFunction, Option... opts);
 }
