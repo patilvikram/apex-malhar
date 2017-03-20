@@ -226,8 +226,10 @@ public class PythonGenericOperator<T> extends BaseOperator
   private void copyFilesToLocalResource(List<String> hdfsFilePaths)
   {
     LOG.debug("Moving files locally ");
-
-
+    for(String hdfsInputFilePath : hdfsFilePaths) {
+      Path path = new Path(stringPath);
+      FileSystem fs = FileSystem.get(path.toUri(), conf);
+    }
 
   }
 
