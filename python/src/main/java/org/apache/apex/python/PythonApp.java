@@ -110,6 +110,7 @@ public class PythonApp implements StreamingApplication
     StramAppLauncher appLauncher = null;
       Configuration configuration = this.getConf();
       configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME,APEX_DIRECTORY_PATH+"/runtime/py4j-0.10.4.tar.gz");
+      configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME,APEX_DIRECTORY_PATH+"/runtime/worker.py");
 
       appLauncher = new StramAppLauncher(getName(), getConf());
       appLauncher.loadDependencies();

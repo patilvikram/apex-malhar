@@ -159,19 +159,20 @@ public class PythonGenericOperator<T> extends BaseOperator
     @Override
     public void connectionStarted(GatewayConnection gatewayConnection)
     {
-      LOG.info("Connection started");
+      LOG.info("Python Connection started");
     }
 
     @Override
     public void connectionStopped(GatewayConnection gatewayConnection)
     {
-      LOG.info("Connection stoppped");
+      LOG.info("Python Connection stoppped");
     }
 
     @Override
     public void serverError(Exception e)
     {
-
+      LOG.info("Gatewaye Server error" + e.getMessage());
+      LOG.error("Gatewaye Server error" + e.getStackTrace());
     }
 
     @Override
@@ -199,20 +200,22 @@ public class PythonGenericOperator<T> extends BaseOperator
     public void serverStopped()
     {
       LOG.info("Gateway server stopped");
+      if (this.pyProcess != null) {
+        this.pyProcess.destroy();
+      }
     }
 
     private void startPythonWorker(int gatewayServerPort)
     {
 
-      ProcessBuilder pb = new ProcessBuilder("/usr/bin/python", "/home/vikram/Documents/src/apex-malhar/python/scripts/OperatorWorker.py", "" + gatewayServerPort);
+      ProcessBuilder pb = new ProcessBuilder();
       try {
         LOG.info("STARTING python worker process");
         Map<String, String> pbEnv = pb.environment();
         pbEnv.put("PYTHONPATH", "/home/vikram/.local/lib/python2.7/site-packages");
-        pb.inheritIO();
-        this.pyProcess = pb.start();
+        this.pyProcess = pb.inheritIO().command("/usr/bin/python", "/home/vikram/Documents/src/apex-malhar/python/scripts/worker.py", "" + gatewayServerPort).start();
         this.pythonServerStarted = true;
-        LOG.info("Python worker started ");
+        LOG.info("Python worker started " + this.pyProcess);
       } catch (IOException e) {
         e.printStackTrace();
         LOG.error("FAILED TO START PYTHON SERVER");
