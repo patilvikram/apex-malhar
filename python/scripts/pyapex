@@ -103,7 +103,7 @@ echo "Starting Apex Runner..."
 if [ ! -x "$DT_HADOOP" ]; then
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   export CLASSPATH=$DT_CLASSPATH
-  "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.python.PyApex"$@" >$APEXRUNNERLOG 2>&1 &
+  "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1 &
   APEXRUNNERPID="$!"  
 else
   export HADOOP_USER_CLASSPATH_FIRST=1
@@ -111,7 +111,7 @@ else
   export HADOOP_CLASSPATH=$(echo -n "$HADOOP_CLASSPATH" | tr ":" "\n" | sed "/slf4j-log4j/d" | sed "/org\/apache\/hadoop/d" | tr "\n" ":")
   #"$DT_HADOOP" org.apache.apex.malhar.python.ApexPythonRunner "$@" >$APEXRUNNERLOG 2>&1 &
   #"$DT_HADOOP" org.apache.apex.python.ApexPythonRunner "$@" >$APEXRUNNERLOG 2>&1 &
-  "$DT_HADOOP" org.apache.apex.python.PyApex"$@" >$APEXRUNNERLOG 2>&1  &
+  "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1  &
   APEXRUNNERPID="$!"
 fi
 sleep 5

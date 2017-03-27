@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.python;
+package org.apache.apex.malhar.python;
 
 import java.io.IOException;
 
@@ -66,7 +66,7 @@ public class PythonApp implements StreamingApplication
   public PythonApp()
   {
     this.conf = new Configuration(true);
-    this.conf.set("dt.loggers.level","com.datatorrent.*:INFO,org.apache.*:DEBUG,httpclient.wire.*:INFO;");
+    this.conf.set("dt.loggers.level", "com.datatorrent.*:INFO,org.apache.*:DEBUG,httpclient.wire.*:INFO;");
   }
 
   public void populateDAG(DAG dag, Configuration conf)
@@ -78,9 +78,9 @@ public class PythonApp implements StreamingApplication
     this.apexStream.populateDag(dag);
     String existingJars = dag.getValue(dag.LIBRARY_JARS);
     existingJars = StringUtils.isNotEmpty(existingJars) ? existingJars + "," : "";
-    existingJars= existingJars + "/home/vikram/.m2/repository/net/sf/py4j/py4j/0.8.1/py4j-0.8.1.jar";
+    existingJars = existingJars + "/home/vikram/.m2/repository/net/sf/py4j/py4j/0.8.1/py4j-0.8.1.jar";
 //    existingJars= existingJars +","+ "/home/vikram/Documents/py4j-0.10.4.tar.gz";
-    dag.setAttribute(dag.LIBRARY_JARS, existingJars );
+    dag.setAttribute(dag.LIBRARY_JARS, existingJars);
     LOG.error("DAG VALUE LIBRARY JARS" + dag.getValue(DAG.LIBRARY_JARS));
   }
 
@@ -102,24 +102,22 @@ public class PythonApp implements StreamingApplication
     return streamFactory;
   }
 
-
   public String launch() throws Exception
   {
     LOG.error("Launching app in python app");
-    String APEX_DIRECTORY_PATH=System.getenv("APEX_HOME");
+    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
     StramAppLauncher appLauncher = null;
-      Configuration configuration = this.getConf();
-      configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME,APEX_DIRECTORY_PATH+"/runtime/py4j-0.10.4.tar.gz");
-      configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME,APEX_DIRECTORY_PATH+"/runtime/worker.py");
+    Configuration configuration = this.getConf();
+    configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME, APEX_DIRECTORY_PATH + "/runtime/py4j-0.10.4.tar.gz");
+    configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME, APEX_DIRECTORY_PATH + "/runtime/worker.py");
 
-      appLauncher = new StramAppLauncher(getName(), getConf());
-      appLauncher.loadDependencies();
+    appLauncher = new StramAppLauncher(getName(), getConf());
+    appLauncher.loadDependencies();
 
-      PythonAppFactory appFactory = new PythonAppFactory(getName(), this);
+    PythonAppFactory appFactory = new PythonAppFactory(getName(), this);
 
-      this.appId = appLauncher.launchApp(appFactory);
-      return appId.toString();
-
+    this.appId = appLauncher.launchApp(appFactory);
+    return appId.toString();
 
   }
 
@@ -134,39 +132,45 @@ public class PythonApp implements StreamingApplication
 
   }
 
-  public PythonApp fromFolder(String directoryPath ){
+  public PythonApp fromFolder(String directoryPath)
+  {
     apexStream = StreamFactory.fromFolder(directoryPath);
     return this;
   }
 
-
-  public PythonApp fromKafka08(String zookeepers,String topic){
-    apexStream = StreamFactory.fromKafka08(zookeepers,topic);
+  public PythonApp fromKafka08(String zookeepers, String topic)
+  {
+    apexStream = StreamFactory.fromKafka08(zookeepers, topic);
     return this;
   }
 
-  public PythonApp fromKafka09(String zookeepers,String topic){
-    apexStream = StreamFactory.fromKafka09(zookeepers,topic);
+  public PythonApp fromKafka09(String zookeepers, String topic)
+  {
+    apexStream = StreamFactory.fromKafka09(zookeepers, topic);
     return this;
   }
 
-  public PythonApp setMap(String name, byte[] searializedFunction ){
-    apexStream = apexStream.map_func( searializedFunction, Option.Options.name(name));
+  public PythonApp setMap(String name, byte[] searializedFunction)
+  {
+    apexStream = apexStream.map_func(searializedFunction, Option.Options.name(name));
     return this;
   }
 
-  public PythonApp setFlatMap(String name,byte[] searializedFunction ){
-    apexStream = apexStream.map_func( searializedFunction, Option.Options.name(name));
+  public PythonApp setFlatMap(String name, byte[] searializedFunction)
+  {
+    apexStream = apexStream.map_func(searializedFunction, Option.Options.name(name));
     return this;
   }
 
-  public PythonApp toConsole(String name){
+  public PythonApp toConsole(String name)
+  {
     apexStream = apexStream.print(Option.Options.name(name));
     return this;
   }
 
-  public PythonApp setConfig(String key,String value){
-    getConf().set(key,value);
+  public PythonApp setConfig(String key, String value)
+  {
+    getConf().set(key, value);
     return this;
   }
 

@@ -40,7 +40,7 @@ class WorkerImpl(object):
         print "Executing for tuple",tupleIn
         return self.callable_f(tupleIn)
     class Java:
-        implements = ["org.apache.apex.malhar.stream.api.python.PythonWorker"]
+        implements = ["org.apache.apex.malhar.python.runtime.PythonWorker"]
 
 def main(argv):
    print (argv[0]) 

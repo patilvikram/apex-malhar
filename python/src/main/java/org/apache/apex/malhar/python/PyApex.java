@@ -16,15 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.stream.api.python;
-
 /**
- * Created by vikram on 3/3/17.
+ * Created by vikram on 15/2/17.
  */
-public interface PythonWorker<T>
+
+package org.apache.apex.malhar.python;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import py4j.GatewayServer;
+
+public class PyApex
 {
 
-  public void setFunction(Object func);
+  private PythonApp streamApp = null;
+  private static final Logger LOG = LoggerFactory.getLogger(PyApex.class);
 
-  public Object execute(T tuple);
+  public PythonApp createApp(String name)
+  {
+    if (streamApp == null) {
+      streamApp = new PythonApp(name);
+    }
+    return streamApp;
+
+  }
+
+  public static void main(String[] args)
+  {
+    PyApex pythonEntryPoint = new PyApex();
+    GatewayServer gatewayServer = new GatewayServer(pythonEntryPoint);
+    gatewayServer.start();
+    LOG.debug("Gateway Server Started");
+  }
+
 }

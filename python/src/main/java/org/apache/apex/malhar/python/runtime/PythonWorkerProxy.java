@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.stream.api.python;
+package org.apache.apex.malhar.python.runtime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

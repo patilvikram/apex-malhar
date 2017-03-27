@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.python;
+package org.apache.apex.malhar.python;
 
 import com.datatorrent.stram.client.StramAppLauncher;
 import com.datatorrent.stram.plan.logical.LogicalPlan;

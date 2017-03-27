@@ -1,3 +1,8 @@
+package org.apache.apex.malhar.python.operator;
+
+/**
+ * Created by vikram on 27/3/17.
+ */
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +21,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.stream.api.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +31,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.apex.malhar.stream.api.python.PythonWorkerProxy;
+import org.apache.apex.malhar.python.runtime.PythonWorkerProxy;
 import org.apache.apex.malhar.stream.api.util.NetworkUtils;
 
 import com.datatorrent.api.Attribute;
