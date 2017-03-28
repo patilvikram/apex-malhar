@@ -19,6 +19,7 @@
 package org.apache.apex.malhar.python;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,7 @@ public class PythonApp implements StreamingApplication
   private StreamFactory streamFactory;
   private ApplicationId appId = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
+  private String py4jSrcZip = "py4j-0.10.4-src.zip";
 
   public String getName()
   {
@@ -74,14 +76,48 @@ public class PythonApp implements StreamingApplication
 
     // add SERIALIZED CODE TO LIB JARS
     // add Worker.py
+
     LOG.error("Populating DAG in python app");
+
     this.apexStream.populateDag(dag);
-    String existingJars = dag.getValue(dag.LIBRARY_JARS);
-    existingJars = StringUtils.isNotEmpty(existingJars) ? existingJars + "," : "";
-    existingJars = existingJars + "/home/vikram/.m2/repository/net/sf/py4j/py4j/0.8.1/py4j-0.8.1.jar";
-//    existingJars= existingJars +","+ "/home/vikram/Documents/py4j-0.10.4.tar.gz";
-    dag.setAttribute(dag.LIBRARY_JARS, existingJars);
-    LOG.error("DAG VALUE LIBRARY JARS" + dag.getValue(DAG.LIBRARY_JARS));
+
+  }
+
+  public void setRequiredJARFiles()
+  {
+    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
+    ArrayList<String> jarFiles = new ArrayList<String>();
+    jarFiles.add(APEX_DIRECTORY_PATH + "/jars/py4j-0.10.4.jar");
+    jarFiles.add(APEX_DIRECTORY_PATH + "/jars/malhar-python-3.7.0-SNAPSHOT.jar");
+    jarFiles.add(APEX_DIRECTORY_PATH + "/runtime/" + py4jSrcZip);
+    jarFiles.add(APEX_DIRECTORY_PATH + "/runtime/worker.py");
+    extendExistingConfig(StramAppLauncher.LIBJARS_CONF_KEY_NAME, jarFiles);
+  }
+
+  public void setRequiredRuntimeFiles()
+  {
+    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
+    ArrayList<String> files = new ArrayList<String>();
+    files.add(APEX_DIRECTORY_PATH + "/runtime/" + py4jSrcZip);
+    files.add(APEX_DIRECTORY_PATH + "/runtime/worker.py");
+    extendExistingConfig(StramAppLauncher.FILES_CONF_KEY_NAME, files);
+
+  }
+
+  public void extendExistingConfig(String fileVariable, ArrayList<String> fileList)
+  {
+    Configuration configuration = this.getConf();
+    String fileCSV = configuration.get(fileVariable);
+    String filesCSVToAppend = StringUtils.join(fileList, ",");
+
+    if (StringUtils.isEmpty(fileCSV)) {
+      fileCSV = filesCSVToAppend;
+
+    } else {
+      fileCSV = fileCSV + "," + filesCSVToAppend;
+    }
+
+    configuration.set(fileVariable, fileCSV);
   }
 
   public Configuration getConf()
@@ -107,9 +143,9 @@ public class PythonApp implements StreamingApplication
     LOG.error("Launching app in python app");
     String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
     StramAppLauncher appLauncher = null;
-    Configuration configuration = this.getConf();
-    configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME, APEX_DIRECTORY_PATH + "/runtime/py4j-0.10.4.tar.gz");
-    configuration.set(StramAppLauncher.FILES_CONF_KEY_NAME, APEX_DIRECTORY_PATH + "/runtime/worker.py");
+
+    this.setRequiredJARFiles();
+    this.setRequiredRuntimeFiles();
 
     appLauncher = new StramAppLauncher(getName(), getConf());
     appLauncher.loadDependencies();

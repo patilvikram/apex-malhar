@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.python.runtime;
+package org.apache.apex.malhar.python.operator.runtime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +28,7 @@ public class PythonWorkerProxy<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerProxy.class);
   private PythonWorker registerdPythonWorker = null;
+  private boolean functionEnabled = false;
   private byte[] serializedFunction = null;
 
   public PythonWorkerProxy(byte[] serializedFunc)
@@ -54,5 +55,12 @@ public class PythonWorkerProxy<T>
     LOG.info("Registering python worker ");
     this.registerdPythonWorker = pythonWorker;
     this.registerdPythonWorker.setFunction(this.serializedFunction);
+    this.functionEnabled = true;
+    LOG.info("Python worker registered ");
+  }
+
+  public boolean isFunctionEnabled()
+  {
+    return this.functionEnabled;
   }
 }

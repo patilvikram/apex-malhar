@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.window.TriggerOption;
 import org.apache.apex.malhar.lib.window.WindowOption;
-
+import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.CompositeStreamTransform;
 import org.apache.apex.malhar.stream.api.Option;

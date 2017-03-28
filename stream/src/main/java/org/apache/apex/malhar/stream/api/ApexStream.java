@@ -216,4 +216,5 @@ public interface ApexStream<T>
    */
   // Before calling this method call check if its function object
   <STREAM extends ApexStream<T>> STREAM map_func(byte[] serializedFunction, Option... opts);
+
 }
