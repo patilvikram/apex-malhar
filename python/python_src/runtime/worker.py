@@ -35,10 +35,7 @@ class WorkerImpl(object):
            import os, imp
   
            print "Setting serialized function dcoding 1"
-           print os.environ['PYTHONPATH']
-           print imp.find_module( 'cloudpickle')
            import cloudpickle
-           #serialized_f = f.decode('ascii')
            print "Decoded serialized funcion", 
 
            self.callable_f=cloudpickle.loads(f) 
@@ -72,14 +69,6 @@ class WorkerImpl(object):
 def main(argv):
 
    import os,getpass
-   print [f for f in sys.path if f.endswith('packages')]
-
-   
-   print os.environ['HOME'] 
-   print site.ENABLE_USER_SITE
-   print site.USER_SITE
-   print site.USER_BASE
-   print ("USER SITE PACKAGE"+site.getusersitepackages())   
    PYTHON_PATH = os.environ['PYTHONPATH']  if 'PYTHONPATH' in os.environ else None
    os.environ['PYTHONPATH']= PYTHON_PATH+':' + site.getusersitepackages().replace('/home/.local/','/home/'+getpass.getuser()+'/.local/')+'/'
    sys.path.extend( os.environ['PYTHONPATH'].split(':'))
@@ -89,7 +78,6 @@ def main(argv):
    cb = CallbackServerParameters(daemonize=False,eager_load=True)
    gateway = JavaGateway(gateway_parameters=gp,callback_server_parameters=CallbackServerParameters())
    gateway.entry_point.register( WorkerImpl(gateway)  )
-   print getpass.getuser()
    
 if __name__ == "__main__":
     main(sys.argv[1:])
