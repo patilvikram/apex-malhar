@@ -68,7 +68,7 @@ public class PythonApp implements StreamingApplication
   public PythonApp()
   {
     this.conf = new Configuration(true);
-    this.conf.set("dt.loggers.level", "com.datatorrent.*:INFO,org.apache.*:DEBUG,httpclient.wire.*:INFO;");
+    this.conf.set("dt.loggers.level", "com.datatorrent.*:INFO,org.apache.*:DEBUG,httpclient.wire.*:INFO;org.apache.apex.malhar.python.*:DEBUG");
   }
 
   public void populateDAG(DAG dag, Configuration conf)

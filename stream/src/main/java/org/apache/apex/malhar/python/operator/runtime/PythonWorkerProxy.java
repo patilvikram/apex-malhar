@@ -30,6 +30,7 @@ public class PythonWorkerProxy<T>
   private PythonWorker registerdPythonWorker = null;
   private boolean functionEnabled = false;
   private byte[] serializedFunction = null;
+  private boolean workerRegistered = false;
 
   public PythonWorkerProxy(byte[] serializedFunc)
   {
@@ -39,7 +40,7 @@ public class PythonWorkerProxy<T>
   public Object execute(T tuple)
   {
     if (registerdPythonWorker != null) {
-
+      setFunction();
       LOG.info("processing tuple " + tuple);
 
       Object result = registerdPythonWorker.execute(tuple);
@@ -52,11 +53,25 @@ public class PythonWorkerProxy<T>
 
   public void register(PythonWorker pythonWorker)
   {
-    LOG.info("Registering python worker ");
+    LOG.info("Registering python worker now ");
     this.registerdPythonWorker = pythonWorker;
-    this.registerdPythonWorker.setFunction(this.serializedFunction);
-    this.functionEnabled = true;
+    this.workerRegistered = true;
     LOG.info("Python worker registered ");
+  }
+
+  public void setFunction()
+  {
+    if (this.isWorkerRegistered() && !isFunctionEnabled()) {
+      LOG.info("Setting SERIALIZED FUNCTION");
+      this.registerdPythonWorker.setFunction(this.serializedFunction);
+      this.functionEnabled = true;
+      LOG.info("Set SERIALIZED FUNCTION");
+    }
+  }
+
+  public boolean isWorkerRegistered()
+  {
+    return this.workerRegistered;
   }
 
   public boolean isFunctionEnabled()

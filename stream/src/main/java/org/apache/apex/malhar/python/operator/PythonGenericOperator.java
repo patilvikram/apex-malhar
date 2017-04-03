@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.python.operator.runtime.PythonWorkerProxy;
+import org.apache.apex.malhar.stream.api.util.LoggerUtils;
 import org.apache.apex.malhar.stream.api.util.NetworkUtils;
 
 import com.datatorrent.api.Attribute;
@@ -89,7 +90,8 @@ public class PythonGenericOperator<T> extends BaseOperator
     this.server.addListener(this.py4jListener);
     this.server.start(true);
     int pythonServerStartAttempts = 5;
-
+    String currentUserName = System.getProperty("user.name");
+    LOG.info("Port number" + currentUserName);
     while (!this.py4jListener.isPythonServerStarted() && !this.pythonWorkerProxy.isFunctionEnabled() && pythonServerStartAttempts > 0) {
       try {
         Thread.sleep(5000L);
@@ -100,6 +102,9 @@ public class PythonGenericOperator<T> extends BaseOperator
       }
     }
 
+    if (this.pythonWorkerProxy.isWorkerRegistered()) {
+      this.pythonWorkerProxy.setFunction();
+    }
     if (!this.py4jListener.isPythonServerStarted()) {
       LOG.error("Python server could not be started");
     }
@@ -121,6 +126,7 @@ public class PythonGenericOperator<T> extends BaseOperator
     private GatewayServer server = null;
     private Process pyProcess = null;
     private boolean pythonServerStarted = false;
+    private static final Logger LOG = LoggerFactory.getLogger(PythonGatewayServerListenser.class);
 
     public boolean isPythonServerStarted()
     {
@@ -134,36 +140,39 @@ public class PythonGenericOperator<T> extends BaseOperator
 
     public void connectionError(Exception e)
     {
+      LOG.info("Python Connection error :" + e.getMessage());
+
     }
 
     public void connectionStarted(GatewayConnection gatewayConnection)
     {
-      PythonGenericOperator.LOG.info("Python Connection started");
+      LOG.info("Python Connection started");
+
     }
 
     public void connectionStopped(GatewayConnection gatewayConnection)
     {
-      PythonGenericOperator.LOG.info("Python Connection stoppped");
+      LOG.info("Python Connection stoppped");
     }
 
     public void serverError(Exception e)
     {
-      PythonGenericOperator.LOG.info("Gatewaye Server error" + e.getMessage());
+      LOG.info("Gatewaye Server error" + e.getMessage());
     }
 
     public void serverPostShutdown()
     {
-      PythonGenericOperator.LOG.info("Gateway server shut down");
+      LOG.info("Gateway server shut down");
     }
 
     public void serverPreShutdown()
     {
-      PythonGenericOperator.LOG.info("Gateway server shutting down");
+      LOG.info("Gateway server shutting down");
     }
 
     public void serverStarted()
     {
-      PythonGenericOperator.LOG.info("Gateway server started");
+      LOG.info("Gateway server started");
       this.startPythonWorker(this.server.getPort());
     }
 
@@ -172,7 +181,7 @@ public class PythonGenericOperator<T> extends BaseOperator
       PythonGenericOperator.LOG.info("Gateway server stopped");
       if (this.pyProcess != null) {
         this.pyProcess.destroy();
-        PythonGenericOperator.LOG.info("Destroyed python worker process");
+        LOG.info("Destroyed python worker process");
       }
 
     }
@@ -188,7 +197,11 @@ public class PythonGenericOperator<T> extends BaseOperator
 
         Map e = pb.environment();
         File py4jDependencyFile = new File("./" + py4jSrcZip);
-        PYTHONPATH = py4jDependencyFile.getAbsolutePath() + ":" + PYTHONPATH;
+        if (PYTHONPATH != null) {
+          PYTHONPATH = py4jDependencyFile.getAbsolutePath() + ":" + PYTHONPATH;
+        } else {
+          PYTHONPATH = py4jDependencyFile.getAbsolutePath();
+        }
         LOG.info("FINALE PYTHON PATH" + PYTHONPATH);
         String py4jDependencyePath = py4jDependencyFile.getAbsolutePath();
         if (py4jDependencyFile.exists()) {
@@ -199,7 +212,9 @@ public class PythonGenericOperator<T> extends BaseOperator
         String py4jWorkerPath = pythonWorkerFile.getAbsolutePath();
         PythonGenericOperator.LOG.info("Python dependency Path " + py4jDependencyePath + " worker Path " + py4jWorkerPath);
         e.put("PYTHONPATH", PYTHONPATH);
-        this.pyProcess = pb.inheritIO().command(new String[]{"/usr/bin/python", py4jWorkerPath, "" + gatewayServerPort}).start();
+        this.pyProcess = pb.command(new String[]{"/usr/bin/python", "-u", py4jWorkerPath, "" + gatewayServerPort}).start();
+        LoggerUtils.captureProcessStreams(this.pyProcess);
+
         this.pythonServerStarted = true;
         PythonGenericOperator.LOG.info("Python worker started " + this.pyProcess);
       } catch (IOException var8) {
