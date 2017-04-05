@@ -194,7 +194,14 @@ public class PythonApp implements StreamingApplication
 
   public PythonApp setFlatMap(String name, byte[] searializedFunction)
   {
-    apexStream = apexStream.map_func(searializedFunction, Option.Options.name(name));
+    apexStream = apexStream.flatmap_func(searializedFunction, Option.Options.name(name));
+    return this;
+  }
+
+
+  public PythonApp setFilter(String name, byte[] searializedFunction)
+  {
+    apexStream = apexStream.filter_func(searializedFunction, Option.Options.name(name));
     return this;
   }
 

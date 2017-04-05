@@ -482,6 +482,25 @@ public class ApexStreamImpl<T> implements ApexStream<T>
 
   }
 
+
+  @Override
+  public ApexStreamImpl<T> flatmap_func(byte[] serializedFunction, Option... opts)
+  {
+    LOG.error("Adding Python generic  operator");
+    PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
+    return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
+
+  }
+
+  @Override
+  public ApexStreamImpl<T> filter_func(byte[] serializedFunction, Option... opts)
+  {
+    LOG.error("Adding Python generic  operator");
+    PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
+    return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
+
+  }
+
   protected <O> ApexStream<O> newStream(DagMeta graph, Brick<O> newBrick)
   {
     ApexStreamImpl<O> newstream = new ApexStreamImpl<>();

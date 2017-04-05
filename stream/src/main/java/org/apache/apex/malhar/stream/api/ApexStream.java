@@ -217,4 +217,24 @@ public interface ApexStream<T>
   // Before calling this method call check if its function object
   <STREAM extends ApexStream<T>> STREAM map_func(byte[] serializedFunction, Option... opts);
 
+  /**
+   * Extend the dag by adding one end operator<br>
+   * @param serializedFunction stores Serialized Function data
+   * @return new stream of type T
+   */
+  // Before calling this method call check if its function object
+  <STREAM extends ApexStream<T>> STREAM flatmap_func(byte[] serializedFunction, Option... opts);
+
+
+  /**
+   * Extend the dag by adding one end operator<br>
+   * @param serializedFunction stores Serialized Function data
+   * @return new stream of type T
+   */
+  // Before calling this method call check if its function object
+  <STREAM extends ApexStream<T>> STREAM filter_func(byte[] serializedFunction, Option... opts);
+
+
+
+
 }

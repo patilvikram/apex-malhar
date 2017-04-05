@@ -48,7 +48,7 @@ public class PythonGenericOperator<T> extends BaseOperator
     {
       PythonGenericOperator.LOG.info("Received Tuple " + tuple);
       Object result = pythonWorkerProxy.execute(tuple);
-      PythonGenericOperator.this.out.emit((String)result);
+      out.emit((String)result);
     }
 
   };
