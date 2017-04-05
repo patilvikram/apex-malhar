@@ -198,7 +198,6 @@ public class PythonApp implements StreamingApplication
     return this;
   }
 
-
   public PythonApp setFilter(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.filter_func(searializedFunction, Option.Options.name(name));

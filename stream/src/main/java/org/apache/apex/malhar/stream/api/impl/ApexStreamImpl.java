@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.apex.malhar.lib.window.TriggerOption;
 import org.apache.apex.malhar.lib.window.WindowOption;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
+import org.apache.apex.malhar.python.operator.PythonMapOperator;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.CompositeStreamTransform;
 import org.apache.apex.malhar.stream.api.Option;
@@ -477,7 +478,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   public ApexStreamImpl<T> map_func(byte[] serializedFunction, Option... opts)
   {
     LOG.error("Adding Python generic  operator");
-    PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
+    PythonGenericOperator<T> operator = new PythonMapOperator<T>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
   }
@@ -487,7 +488,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   public ApexStreamImpl<T> flatmap_func(byte[] serializedFunction, Option... opts)
   {
     LOG.error("Adding Python generic  operator");
-    PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
+    PythonGenericOperator<T> operator = new PythonMapOperator<T>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
   }
@@ -496,7 +497,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   public ApexStreamImpl<T> filter_func(byte[] serializedFunction, Option... opts)
   {
     LOG.error("Adding Python generic  operator");
-    PythonGenericOperator<T> operator = new PythonGenericOperator<T>(serializedFunction);
+    PythonGenericOperator<T> operator = new PythonMapOperator<T>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
   }

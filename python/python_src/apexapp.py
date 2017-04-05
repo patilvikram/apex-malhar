@@ -114,7 +114,6 @@ class ApexStreamingApp():
             raise Exception
         serialized_func = bytearray()
         serialized_func.extend(cloudpickle.dumps(func))
-
         temp_file = NamedTemporaryFile()
         temp_file.write(serialized_func)
         temp_file.name = "pythonapp_ " + self.instanceid + "_opr_" + name + ".ser"

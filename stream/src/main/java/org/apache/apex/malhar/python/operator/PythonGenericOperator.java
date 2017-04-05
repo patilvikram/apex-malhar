@@ -32,13 +32,13 @@ import py4j.GatewayConnection;
 import py4j.GatewayServer;
 import py4j.GatewayServerListener;
 
-public class PythonGenericOperator<T> extends BaseOperator
+public abstract class PythonGenericOperator<T> extends BaseOperator
 {
-  private transient GatewayServer server = null;
-  private transient PythonGenericOperator.PythonGatewayServerListenser py4jListener = null;
-  private transient PythonWorkerProxy<T> pythonWorkerProxy = null;
-  private transient Process pyProcess = null;
-  private byte[] serializedFunction = null;
+  protected transient GatewayServer server = null;
+  protected transient PythonGenericOperator.PythonGatewayServerListenser py4jListener = null;
+  protected transient PythonWorkerProxy<T> pythonWorkerProxy = null;
+  protected transient Process pyProcess = null;
+  protected byte[] serializedFunction = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
 
   public final transient DefaultInputPort<T> in = new DefaultInputPort<T>()
@@ -46,17 +46,18 @@ public class PythonGenericOperator<T> extends BaseOperator
     @Override
     public void process(T tuple)
     {
-      PythonGenericOperator.LOG.info("Received Tuple " + tuple);
-      Object result = pythonWorkerProxy.execute(tuple);
-      out.emit((String)result);
+
+      processTuple(tuple);
+
     }
 
   };
-  public final transient DefaultOutputPort<String> out = new DefaultOutputPort();
+  public final transient DefaultOutputPort<T> out = new DefaultOutputPort<T>();
 
   public PythonGenericOperator()
   {
     this.serializedFunction = null;
+
   }
 
   public PythonGenericOperator(byte[] serializedFunc)
@@ -224,4 +225,6 @@ public class PythonGenericOperator<T> extends BaseOperator
 
     }
   }
+
+  protected abstract void processTuple(T tuple);
 }
