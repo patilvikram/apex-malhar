@@ -23,62 +23,87 @@ import pip
 from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters
 import logging
 
-class WorkerImpl(object):
+gateway = None
 
+
+class WorkerImpl(object):
     serialized_f = None
     callable_f = None
-    def __init__(self, gateway):
+    xformType = None
+
+    def __init__(self, gateway, xformType):
         self.gateway = gateway
+        self.xformType = xformType
 
-    def setFunction(self, f):
-	try:
-           import os, imp
-  
-           print "Setting serialized function dcoding 1"
-           import cloudpickle
-           print "Decoded serialized funcion", 
+    def setFunction(self, f, xformType):
+        try:
+            import os, imp
 
-           self.callable_f=cloudpickle.loads(f) 
-           print "Serialized function set correctly"
-	except ValueError as e:
-	   print str(e)
-           from traceback import print_exc
-           print_exc()
+            print "Setting serialized function dcoding 1"
+            print os.environ['PYTHONPATH']
+            print imp.find_module('cloudpickle')
+            import cloudpickle
+            # serialized_f = f.decode('ascii')
+            print "Decoded serialized funcion", xformType
+
+            self.callable_f = cloudpickle.loads(f)
+            self.xformType = xformType
+            print "Serialized function set correctly"
+        except ValueError as e:
+            print str(e)
+            from traceback import print_exc
+            print_exc()
         except Exception:
-           from traceback import print_exc
-           print_exc()
-      	return "RETURN VALUE"
+            from traceback import print_exc
+            print_exc()
+        return "RETURN VALUE"
 
-    def execute(self,tupleIn ):
-        print "Executing for tuple",tupleIn
-	try:
-           result  =self.callable_f(tupleIn)
-           print "Generated for tuple", result
-	   return result
-	except ValueError as e:
-	   print str(e)
-           from traceback import print_exc
-           print_exc()
+    def execute(self, tupleIn):
+        print "Executing for tuple", tupleIn, self.xformType
+        try:
+            result = self.callable_f(tupleIn)
+            if self.xformType == 'MAP':
+                return result
+            elif self.xformType == 'FLAT_MAP':
+
+                from py4j.java_collections import SetConverter, MapConverter, ListConverter
+                return ListConverter().convert(result, self.gateway._gateway_client)
+            print "Result value", result
+            return result
+        except ValueError as e:
+            print str(e)
+            from traceback import print_exc
+            print_exc()
         except Exception:
-           from traceback import print_exc
-           print_exc()
-      	return None
+            from traceback import print_exc
+            print_exc()
+        return None
+
     class Java:
         implements = ["org.apache.apex.malhar.python.operator.runtime.PythonWorker"]
 
-def main(argv):
 
-   import os,getpass
-   PYTHON_PATH = os.environ['PYTHONPATH']  if 'PYTHONPATH' in os.environ else None
-   os.environ['PYTHONPATH']= PYTHON_PATH+':' + site.getusersitepackages().replace('/home/.local/','/home/'+getpass.getuser()+'/.local/')+'/'
-   sys.path.extend( os.environ['PYTHONPATH'].split(':'))
-   print os.environ['PYTHONPATH']
-   import pickle
-   gp = GatewayParameters(address='127.0.0.1',port=int(argv[0])) 
-   cb = CallbackServerParameters(daemonize=False,eager_load=True)
-   gateway = JavaGateway(gateway_parameters=gp,callback_server_parameters=CallbackServerParameters())
-   gateway.entry_point.register( WorkerImpl(gateway)  )
-   
+def main(argv):
+    import os, getpass
+    print [f for f in sys.path if f.endswith('packages')]
+
+    print os.environ['HOME']
+    print site.ENABLE_USER_SITE
+    print site.USER_SITE
+    print site.USER_BASE
+    print ("USER SITE PACKAGE" + site.getusersitepackages())
+    PYTHON_PATH = os.environ['PYTHONPATH'] if 'PYTHONPATH' in os.environ else None
+    os.environ['PYTHONPATH'] = PYTHON_PATH + ':' + site.getusersitepackages().replace('/home/.local/',
+                                                                                      '/home/' + getpass.getuser() + '/.local/') + '/'
+    sys.path.extend(os.environ['PYTHONPATH'].split(':'))
+    print os.environ['PYTHONPATH']
+    import pickle
+    gp = GatewayParameters(address='127.0.0.1', port=int(argv[0]), auto_convert=True)
+    cb = CallbackServerParameters(daemonize=False, eager_load=True)
+    gateway = JavaGateway(gateway_parameters=gp, callback_server_parameters=CallbackServerParameters())
+    gateway.entry_point.register(WorkerImpl(gateway, argv[1]))
+    print getpass.getuser()
+
+
 if __name__ == "__main__":
     main(sys.argv[1:])
-

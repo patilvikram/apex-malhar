@@ -35,11 +35,31 @@ import py4j.GatewayServerListener;
 public abstract class PythonGenericOperator<T> extends BaseOperator
 {
   protected transient GatewayServer server = null;
-  protected transient PythonGenericOperator.PythonGatewayServerListenser py4jListener = null;
+  protected transient PythonGatewayServerListenser py4jListener = null;
   protected transient PythonWorkerProxy<T> pythonWorkerProxy = null;
   protected transient Process pyProcess = null;
   protected byte[] serializedFunction = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
+  protected transient  OpType xFormType = null;
+
+  public enum OpType
+  {
+    MAP("MAP"),
+    FLAT_MAP("FLAT_MAP");
+
+    private String xFormName = null;
+
+    OpType(String name)
+    {
+      this.xFormName = name;
+    }
+
+    public String getType()
+    {
+      return xFormName;
+    }
+
+  }
 
   public final transient DefaultInputPort<T> in = new DefaultInputPort<T>()
   {
@@ -87,7 +107,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     this.server = new GatewayServer(this.pythonWorkerProxy, port);
     LOG.info("Port number" + port);
     LOG.error("Port number" + port);
-    this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server);
+    this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.xFormType);
     this.server.addListener(this.py4jListener);
     this.server.start(true);
     int pythonServerStartAttempts = 5;
@@ -104,7 +124,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     }
 
     if (this.pythonWorkerProxy.isWorkerRegistered()) {
-      this.pythonWorkerProxy.setFunction();
+      this.pythonWorkerProxy.setFunction(this.xFormType.getType());
     }
     if (!this.py4jListener.isPythonServerStarted()) {
       LOG.error("Python server could not be started");
@@ -127,6 +147,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     private GatewayServer server = null;
     private Process pyProcess = null;
     private boolean pythonServerStarted = false;
+    private OpType xFormType = OpType.MAP;
     private static final Logger LOG = LoggerFactory.getLogger(PythonGatewayServerListenser.class);
 
     public boolean isPythonServerStarted()
@@ -134,9 +155,10 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
       return this.pythonServerStarted;
     }
 
-    public PythonGatewayServerListenser(GatewayServer startedServer)
+    public PythonGatewayServerListenser(GatewayServer startedServer, OpType xFormType)
     {
       this.server = startedServer;
+      this.xFormType =  xFormType;
     }
 
     public void connectionError(Exception e)
@@ -213,7 +235,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
         String py4jWorkerPath = pythonWorkerFile.getAbsolutePath();
         PythonGenericOperator.LOG.info("Python dependency Path " + py4jDependencyePath + " worker Path " + py4jWorkerPath);
         e.put("PYTHONPATH", PYTHONPATH);
-        this.pyProcess = pb.command(new String[]{"/usr/bin/python", "-u", py4jWorkerPath, "" + gatewayServerPort}).start();
+        this.pyProcess = pb.command(new String[]{"/usr/bin/python", "-u", py4jWorkerPath, "" + gatewayServerPort, xFormType.getType() }).start();
         LoggerUtils.captureProcessStreams(this.pyProcess);
 
         this.pythonServerStarted = true;

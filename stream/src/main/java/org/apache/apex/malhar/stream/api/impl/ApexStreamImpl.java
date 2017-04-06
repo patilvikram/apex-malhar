@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.window.TriggerOption;
 import org.apache.apex.malhar.lib.window.WindowOption;
+import org.apache.apex.malhar.python.operator.PythonFlatMapOperator;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 import org.apache.apex.malhar.python.operator.PythonMapOperator;
 import org.apache.apex.malhar.stream.api.ApexStream;
@@ -488,7 +489,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   public ApexStreamImpl<T> flatmap_func(byte[] serializedFunction, Option... opts)
   {
     LOG.error("Adding Python generic  operator");
-    PythonGenericOperator<T> operator = new PythonMapOperator<T>(serializedFunction);
+    PythonGenericOperator<T> operator = new PythonFlatMapOperator<T>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
   }

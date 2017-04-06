@@ -21,7 +21,7 @@ package org.apache.apex.malhar.python.operator.runtime;
 public interface PythonWorker<T>
 {
 
-  public Object setFunction(byte[] func);
+  public Object setFunction(byte[] func, String opType );
 
   public Object execute(T tuple);
 

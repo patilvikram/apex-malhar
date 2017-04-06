@@ -100,12 +100,19 @@ class ApexStreamingApp():
     def setFlatMap(self, name, func):
         if not isinstance(func, types.FunctionType):
             raise Exception
+
+        # def flat_map_wrapper(tuple):
+        #     result = func(tuple )
+        #     print "RESULT VALUE BEFORE CONVERSION", result
+        #     from py4j.java_collections import SetConverter, MapConverter, ListConverter
+        #     return ListConverter().convert(result, self.gateway._gateway_client)
+
         serialized_func = bytearray()
         serialized_func.extend(cloudpickle.dumps(func))
-
-        temp_file = NamedTemporaryFile()
-        temp_file.write(serialized_func)
-        temp_file.name = "pythonapp_ " + self.instanceid + "_opr_" + name + ".ser"
+        # temp_file = NamedTemporaryFile()
+        # temp_file.write(serialized_func)
+        # temp_file.name = "pythonapp_ " + self.instance_id + "_opr_" + name + ".ser"
+        print serialized_func
         self.java_streaming_app = self.java_streaming_app.setFlatMap(name, serialized_func)
         return self
 
@@ -116,7 +123,7 @@ class ApexStreamingApp():
         serialized_func.extend(cloudpickle.dumps(func))
         temp_file = NamedTemporaryFile()
         temp_file.write(serialized_func)
-        temp_file.name = "pythonapp_ " + self.instanceid + "_opr_" + name + ".ser"
+        temp_file.name = "pythonapp_ " + self.instance_id + "_opr_" + name + ".ser"
         self.java_streaming_app = self.java_streaming_app.setFilter(name, serialized_func)
         return self
 

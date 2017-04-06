@@ -12,12 +12,13 @@ public class PythonMapOperator<T> extends PythonGenericOperator<T>
 
   public PythonMapOperator()
   {
-
+    xFormType = OpType.MAP;
   }
 
   public PythonMapOperator(byte[] serializedFunc)
   {
     super(serializedFunc);
+    xFormType = OpType.MAP;
   }
 
   @Override

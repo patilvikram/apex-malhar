@@ -40,7 +40,7 @@ public class PythonWorkerProxy<T>
   public Object execute(T tuple)
   {
     if (registerdPythonWorker != null) {
-      setFunction();
+
       LOG.info("processing tuple " + tuple);
 
       Object result = registerdPythonWorker.execute(tuple);
@@ -59,11 +59,11 @@ public class PythonWorkerProxy<T>
     LOG.info("Python worker registered ");
   }
 
-  public void setFunction()
+  public void setFunction(String opType)
   {
     if (this.isWorkerRegistered() && !isFunctionEnabled()) {
       LOG.info("Setting SERIALIZED FUNCTION");
-      this.registerdPythonWorker.setFunction(this.serializedFunction);
+      this.registerdPythonWorker.setFunction(this.serializedFunction, opType );
       this.functionEnabled = true;
       LOG.info("Set SERIALIZED FUNCTION");
     }
