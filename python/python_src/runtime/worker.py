@@ -65,9 +65,15 @@ class WorkerImpl(object):
             if self.xformType == 'MAP':
                 return result
             elif self.xformType == 'FLAT_MAP':
-
                 from py4j.java_collections import SetConverter, MapConverter, ListConverter
                 return ListConverter().convert(result, self.gateway._gateway_client)
+
+            elif self.xformType == 'FILTER':
+                if type(result) != bool:
+                        result = True if result is not None else False
+                return result
+
+
             print "Result value", result
             return result
         except ValueError as e:
@@ -82,9 +88,20 @@ class WorkerImpl(object):
     class Java:
         implements = ["org.apache.apex.malhar.python.operator.runtime.PythonWorker"]
 
+# TODO this may cause race condition
+def find_free_port():
+    import socket
+    s = socket.socket()
+    s.listen(0)
+    addr, found_port= s.getsockname()  # Return the port number assigned.
+    print "FOUND AVAILABLE PORT ", found_port
+    s.shutdown(socket.SHUT_RDWR)
+    s.close()
+    return found_port
 
 def main(argv):
     import os, getpass
+    print argv
     print [f for f in sys.path if f.endswith('packages')]
 
     print os.environ['HOME']
@@ -99,8 +116,21 @@ def main(argv):
     print os.environ['PYTHONPATH']
     import pickle
     gp = GatewayParameters(address='127.0.0.1', port=int(argv[0]), auto_convert=True)
-    cb = CallbackServerParameters(daemonize=False, eager_load=True)
-    gateway = JavaGateway(gateway_parameters=gp, callback_server_parameters=CallbackServerParameters())
+    cb = CallbackServerParameters(daemonize=False, eager_load=True,port= 0)
+    gateway = JavaGateway(gateway_parameters=gp, callback_server_parameters=cb)
+
+    # retrieve the port on which the python callback server was bound to.
+    python_port = gateway.get_callback_server().get_listening_port()
+    print "PYTHON CALLBACK SERVER LISTENING PORT "+ str(python_port)
+
+    # tell the Java side to connect to the python callback server with the new
+    # python port. Note that we use the java_gateway_server attribute that
+    # retrieves the GatewayServer instance.
+    gateway.java_gateway_server.resetCallbackClient(
+        gateway.java_gateway_server.getCallbackClient().getAddress(),
+        python_port)
+
+
     gateway.entry_point.register(WorkerImpl(gateway, argv[1]))
     print getpass.getuser()
 

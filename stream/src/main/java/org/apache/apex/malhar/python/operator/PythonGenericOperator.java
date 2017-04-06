@@ -45,7 +45,8 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   public enum OpType
   {
     MAP("MAP"),
-    FLAT_MAP("FLAT_MAP");
+    FLAT_MAP("FLAT_MAP"),
+    FILTER("FILTER");
 
     private String xFormName = null;
 
@@ -105,11 +106,14 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     this.pythonWorkerProxy = new PythonWorkerProxy(this.serializedFunction);
     int port = NetworkUtils.findAvaliablePort();
     this.server = new GatewayServer(this.pythonWorkerProxy, port);
-    LOG.info("Port number" + port);
-    LOG.error("Port number" + port);
+
     this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.xFormType);
     this.server.addListener(this.py4jListener);
     this.server.start(true);
+
+
+    LOG.info("Port number" + this.server.getPort());
+    LOG.error("Port number" + this.server.getPort());
     int pythonServerStartAttempts = 5;
     String currentUserName = System.getProperty("user.name");
     LOG.info("Port number" + currentUserName);
@@ -169,7 +173,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 
     public void connectionStarted(GatewayConnection gatewayConnection)
     {
-      LOG.info("Python Connection started");
+      LOG.info("Python Connection started" + gatewayConnection.getSocket().getPort());
 
     }
 
