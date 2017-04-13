@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.api.EmbeddedAppLauncher;
+import org.apache.apex.api.Launcher;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
@@ -37,9 +39,6 @@ import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.stram.client.StramAppLauncher;
 
-/**
- * Created by vikram on 17/2/17.
- */
 
 public class PythonApp implements StreamingApplication
 {
@@ -138,7 +137,7 @@ public class PythonApp implements StreamingApplication
     return streamFactory;
   }
 
-  public String launch() throws Exception
+  public String launch(boolean local) throws Exception
   {
     LOG.error("Launching app in python app");
     String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
@@ -147,12 +146,19 @@ public class PythonApp implements StreamingApplication
     this.setRequiredJARFiles();
     this.setRequiredRuntimeFiles();
 
-    appLauncher = new StramAppLauncher(getName(), getConf());
-    appLauncher.loadDependencies();
+    if (local) {
+      EmbeddedAppLauncher launcher = Launcher.getLauncher(Launcher.LaunchMode.EMBEDDED);
+      Launcher.AppHandle handle  = launcher.launchApp(this,getConf());
+      return "LAUNCHED";
 
-    PythonAppFactory appFactory = new PythonAppFactory(getName(), this);
+    } else {
+      appLauncher = new StramAppLauncher(getName(), getConf());
+      appLauncher.loadDependencies();
 
-    this.appId = appLauncher.launchApp(appFactory);
+      PythonAppFactory appFactory = new PythonAppFactory(getName(), this);
+
+      this.appId = appLauncher.launchApp(appFactory);
+    }
     return appId.toString();
 
   }
