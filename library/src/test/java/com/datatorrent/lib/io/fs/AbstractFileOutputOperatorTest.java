@@ -63,15 +63,17 @@ import com.google.common.io.LimitInputStream;
 
 import com.datatorrent.api.Attribute;
 import com.datatorrent.api.Context;
+import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.LocalMode;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.Stateless;
-import com.datatorrent.lib.helper.OperatorContextTestHelper;
 import com.datatorrent.lib.testbench.RandomWordGenerator;
 import com.datatorrent.lib.util.TestUtils;
 import com.datatorrent.lib.util.TestUtils.TestInfo;
 import com.datatorrent.netlet.util.DTThrowable;
+
+import static com.datatorrent.lib.helper.OperatorContextTestHelper.mockOperatorContext;
 
 public class AbstractFileOutputOperatorTest
 {
@@ -87,7 +89,7 @@ public class AbstractFileOutputOperatorTest
   public static class FSTestWatcher extends TestInfo
   {
     public boolean writeToTmp = false;
-    public OperatorContextTestHelper.TestIdOperatorContext testOperatorContext;
+    public OperatorContext testOperatorContext;
 
     @Override
     protected void starting(Description description)
@@ -100,7 +102,7 @@ public class AbstractFileOutputOperatorTest
         attributeMap.put(Context.DAGContext.CHECKPOINT_WINDOW_COUNT, 60);
         attributeMap.put(Context.OperatorContext.SPIN_MILLIS, 500);
 
-        testOperatorContext = new OperatorContextTestHelper.TestIdOperatorContext(0, attributeMap);
+        testOperatorContext = mockOperatorContext(0, attributeMap);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -776,6 +778,52 @@ public class AbstractFileOutputOperatorTest
     writer.input.put(6);
     writer.endWindow();
     writer.committed(1);
+
+    writer.teardown();
+  }
+
+  @Test
+  public void testSingleRollingFileEmptyWindowsWrite()
+  {
+    SingleHDFSExactlyOnceWriter writer = new SingleHDFSExactlyOnceWriter();
+
+    testSingleRollingFileEmptyWindowsWriteHelper(writer);
+
+    //Rolling file 0
+
+    String singleFileName = testMeta.getDir() + File.separator + SINGLE_FILE;
+
+    int numberOfFiles = new File(testMeta.getDir()).listFiles().length;
+
+    Assert.assertEquals("More than one File in Directory", 1, numberOfFiles);
+
+    String correctContents = "0\n" + "1\n" + "2\n";
+    checkOutput(0, singleFileName, correctContents);
+  }
+
+  private void testSingleRollingFileEmptyWindowsWriteHelper(SingleHDFSExactlyOnceWriter writer)
+  {
+    writer.setFilePath(testMeta.getDir());
+    writer.setMaxLength(4);
+    writer.setRotationWindows(1);
+    writer.setAlwaysWriteToTmp(testMeta.writeToTmp);
+    writer.setup(testMeta.testOperatorContext);
+
+    writer.beginWindow(0);
+    writer.input.put(0);
+    writer.input.put(1);
+    writer.input.put(2);
+    writer.endWindow();
+
+    writer.beginWindow(1);
+    writer.endWindow();
+
+    writer.beginWindow(2);
+    writer.endWindow();
+
+    writer.beforeCheckpoint(2);
+    writer.checkpointed(2);
+    writer.committed(2);
 
     writer.teardown();
   }

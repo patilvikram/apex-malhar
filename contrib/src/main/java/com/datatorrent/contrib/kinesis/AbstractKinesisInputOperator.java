@@ -36,15 +36,13 @@ import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.apex.malhar.lib.wal.FSWindowDataManager;
 import org.apache.apex.malhar.lib.wal.WindowDataManager;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.kinesis.model.Shard;
 import com.amazonaws.services.kinesis.model.ShardIteratorType;
-import com.esotericsoftware.kryo.DefaultSerializer;
-import com.esotericsoftware.kryo.serializers.JavaSerializer;
 import com.google.common.collect.Sets;
 
 import com.datatorrent.api.Context.OperatorContext;
@@ -56,18 +54,9 @@ import com.datatorrent.api.Operator.ActivationListener;
 import com.datatorrent.api.Partitioner;
 import com.datatorrent.api.Stats;
 import com.datatorrent.api.StatsListener;
+import com.datatorrent.api.annotation.Stateless;
 import com.datatorrent.common.util.Pair;
 import com.datatorrent.lib.util.KryoCloneUtils;
-
-@DefaultSerializer(JavaSerializer.class)
-class KinesisPair <F, S> extends Pair<F, S>
-{
-  public KinesisPair(F first, S second)
-  {
-    super(first, second);
-  }
-}
-
 
 /**
  * Base implementation of Kinesis Input Operator. Fetches records from kinesis and emits them as tuples.<br/>
@@ -103,7 +92,7 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
   protected WindowDataManager windowDataManager;
   protected transient long currentWindowId;
   protected transient int operatorId;
-  protected final transient Map<String, KinesisPair<String, Integer>> currentWindowRecoveryState;
+  protected final transient Map<String, MutablePair<String, Integer>> currentWindowRecoveryState;
   @Valid
   protected KinesisConsumer consumer = new KinesisConsumer();
 
@@ -128,8 +117,6 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
 
   private transient long lastRepartitionTime = 0L;
 
-  private transient boolean isReplayState = false;
-
   //No of shards per partition in dynamic MANY_TO_ONE strategy
   // If the value is more than 1, then it enables the dynamic partitioning
   @Min(1)
@@ -147,8 +134,12 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
 
   public AbstractKinesisInputOperator()
   {
-    windowDataManager = new FSWindowDataManager();
-    currentWindowRecoveryState = new HashMap<String, KinesisPair<String, Integer>>();
+    /*
+     * Application may override the windowDataManger behaviour but default
+     * would be NoopWindowDataManager.
+     */
+    windowDataManager = new WindowDataManager.NoopWindowDataManager();
+    currentWindowRecoveryState = new HashMap<String, MutablePair<String, Integer>>();
   }
   /**
    * Derived class has to implement this method, so that it knows what type of message it is going to send to Malhar.
@@ -158,6 +149,14 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
    * @param rc Record to convert into tuple
    */
   public abstract T getTuple(Record rc);
+
+  /**
+   * Any concrete class derived from AbstractKinesisInputOperator may implement this method to emit tuples to an output port.
+   */
+  public void emitTuple(Pair<String, Record> data)
+  {
+    outputPort.emit(getTuple(data.getSecond()));
+  }
 
   @Override
   public void partitioned(Map<Integer, Partition<AbstractKinesisInputOperator>> partitions)
@@ -425,9 +424,6 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
     operatorId = context.getId();
     windowDataManager.setup(context);
     shardPosition.clear();
-    if (context.getValue(OperatorContext.ACTIVATION_WINDOW_ID) < windowDataManager.getLargestCompletedWindow()) {
-      isReplayState = true;
-    }
   }
 
   /**
@@ -457,25 +453,37 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
   {
     try {
       @SuppressWarnings("unchecked")
-      Map<String, KinesisPair<String, Integer>> recoveredData =
-          (Map<String, KinesisPair<String, Integer>>)windowDataManager.retrieve(windowId);
+      Map<String, MutablePair<String, Integer>> recoveredData =
+          (Map<String, MutablePair<String, Integer>>)windowDataManager.retrieve(windowId);
       if (recoveredData == null) {
         return;
       }
-      for (Map.Entry<String, KinesisPair<String, Integer>> rc: recoveredData.entrySet()) {
+      for (Map.Entry<String, MutablePair<String, Integer>> rc: recoveredData.entrySet()) {
         logger.debug("Replaying the windowId: {}", windowId);
-        logger.debug("ShardId: " + rc.getKey() + " , Start Sequence Id: " + rc.getValue().getFirst() + " , No Of Records: " + rc.getValue().getSecond());
+        logger.debug("ShardId: " + rc.getKey() + " , Start Sequence Id: " + rc.getValue().getLeft() + " , No Of Records: " + rc.getValue().getRight());
         try {
-          List<Record> records = KinesisUtil.getInstance().getRecords(consumer.streamName, rc.getValue().getSecond(),
-              rc.getKey(), ShardIteratorType.AT_SEQUENCE_NUMBER, rc.getValue().getFirst());
+          List<Record> records = KinesisUtil.getInstance().getRecords(consumer.streamName, rc.getValue().getRight(),
+              rc.getKey(), ShardIteratorType.AT_SEQUENCE_NUMBER, rc.getValue().getLeft());
           for (Record record : records) {
-            outputPort.emit(getTuple(record));
+            emitTuple(new Pair<String, Record>(rc.getKey(), record));
             shardPosition.put(rc.getKey(), record.getSequenceNumber());
           }
         } catch(Exception e)
         {
           throw new RuntimeException(e);
         }
+      }
+
+      /*
+       * Set the shard positions and start the consumer if last recovery windowid
+       * match with current completed windowid.
+       */
+      if (windowId == windowDataManager.getLargestCompletedWindow()) {
+        // Set the shard positions to the consumer
+        Map<String, String> statsData = new HashMap<String, String>(getConsumer().getShardPosition());
+        statsData.putAll(shardPosition);
+        getConsumer().resetShardPositions(statsData);
+        consumer.start();
       }
     }
     catch (IOException e) {
@@ -507,9 +515,9 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
   @Override
   public void activate(OperatorContext ctx)
   {
-    if(isReplayState)
-    {
-      // If it is a replay state, don't start the consumer
+    // If it is a replay state, don't start the consumer
+    if (context.getValue(OperatorContext.ACTIVATION_WINDOW_ID) != Stateless.WINDOW_ID &&
+      context.getValue(OperatorContext.ACTIVATION_WINDOW_ID) < windowDataManager.getLargestCompletedWindow()) {
       return;
     }
     consumer.start();
@@ -561,26 +569,14 @@ public abstract class AbstractKinesisInputOperator <T> implements InputOperator,
       Pair<String, Record> data = consumer.pollRecord();
       String shardId = data.getFirst();
       String recordId = data.getSecond().getSequenceNumber();
-      T tuple = getTuple(data.getSecond());
-      outputPort.emit(tuple);
-      if(!currentWindowRecoveryState.containsKey(shardId))
-      {
-        currentWindowRecoveryState.put(shardId, new KinesisPair<String, Integer>(recordId, 1));
+      emitTuple(data);
+      MutablePair<String, Integer> shardOffsetAndCount = currentWindowRecoveryState.get(shardId);
+      if (shardOffsetAndCount == null) {
+        currentWindowRecoveryState.put(shardId, new MutablePair<String, Integer>(recordId, 1));
       } else {
-        KinesisPair<String, Integer> second = currentWindowRecoveryState.get(shardId);
-        Integer noOfRecords = second.getSecond();
-        currentWindowRecoveryState.put(data.getFirst(), new KinesisPair<String, Integer>(second.getFirst(), noOfRecords+1));
+        shardOffsetAndCount.setRight(shardOffsetAndCount.right+1);
       }
       shardPosition.put(shardId, recordId);
-    }
-    if(isReplayState)
-    {
-      isReplayState = false;
-      // Set the shard positions to the consumer
-      Map<String, String> statsData = new HashMap<String, String>(getConsumer().getShardPosition());
-      statsData.putAll(shardPosition);
-      getConsumer().resetShardPositions(statsData);
-      consumer.start();
     }
     emitCount += count;
   }

@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.apex</groupId>
     <artifactId>malhar</artifactId>
-    <version>3.7.0-SNAPSHOT</version>
+    <version>3.8.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>malhar-library</artifactId>
@@ -308,18 +308,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.8.5</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-           <groupId>org.hamcrest</groupId>
-           <artifactId>hamcrest-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-websocket</artifactId>
       <version>${jetty.version}</version>
@@ -328,7 +316,7 @@
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
-      <version>1.8.3</version>
+      <version>1.9.2</version>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
@@ -366,7 +354,7 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.5.4</version>
     </dependency>
-    <dependency>	  
+    <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>amazon-sqs-java-messaging-lib</artifactId>
       <version>1.0.0</version>
@@ -376,7 +364,7 @@
           <groupId>com.amazonaws</groupId>
           <artifactId>aws-java-sdk-sqs</artifactId>
         </exclusion>
-      </exclusions> 
+      </exclusions>
     </dependency>
   </dependencies>
 
