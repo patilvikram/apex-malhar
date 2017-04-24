@@ -18,3 +18,4 @@
 #
 
 from .apexapp import createApp
+from .apexapp import getApp

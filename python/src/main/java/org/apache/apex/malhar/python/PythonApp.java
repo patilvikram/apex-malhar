@@ -18,27 +18,22 @@
  */
 package org.apache.apex.malhar.python;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.apex.api.EmbeddedAppLauncher;
-import org.apache.apex.api.Launcher;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.stram.client.StramAppLauncher;
-
 
 public class PythonApp implements StreamingApplication
 {
@@ -48,6 +43,8 @@ public class PythonApp implements StreamingApplication
   private ApplicationId appId = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
   private String py4jSrcZip = "py4j-0.10.4-src.zip";
+
+  private PythonAppManager manager = null;
 
   public String getName()
   {
@@ -60,6 +57,12 @@ public class PythonApp implements StreamingApplication
   {
     this.name = name;
     this.conf = new Configuration(true);
+  }
+
+  public PythonApp(String name, ApplicationId appId)
+  {
+    this.appId = appId;
+    this.name = name;
   }
 
   private Configuration conf;
@@ -139,28 +142,16 @@ public class PythonApp implements StreamingApplication
 
   public String launch(boolean local) throws Exception
   {
-    LOG.error("Launching app in python app");
-    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
-    StramAppLauncher appLauncher = null;
+    PythonAppManager.LaunchMode mode = PythonAppManager.LaunchMode.HADOOP;
+    if (local) {
+      mode = PythonAppManager.LaunchMode.LOCAL;
+    }
 
     this.setRequiredJARFiles();
     this.setRequiredRuntimeFiles();
+    this.manager = new PythonAppManager(this, mode);
 
-    if (local) {
-      EmbeddedAppLauncher launcher = Launcher.getLauncher(Launcher.LaunchMode.EMBEDDED);
-      Launcher.AppHandle handle  = launcher.launchApp(this,getConf());
-      return "LAUNCHED";
-
-    } else {
-      appLauncher = new StramAppLauncher(getName(), getConf());
-      appLauncher.loadDependencies();
-
-      PythonAppFactory appFactory = new PythonAppFactory(getName(), this);
-
-      this.appId = appLauncher.launchApp(appFactory);
-    }
-    return appId.toString();
-
+    return manager.launch();
   }
 
   public ApexStream getApexStream()
@@ -183,6 +174,12 @@ public class PythonApp implements StreamingApplication
   public PythonApp fromKafka08(String zookeepers, String topic)
   {
     apexStream = StreamFactory.fromKafka08(zookeepers, topic);
+    return this;
+  }
+
+  public PythonApp fromData(List<Object> inputs)
+  {
+    apexStream = StreamFactory.fromData(inputs);
     return this;
   }
 
@@ -222,12 +219,12 @@ public class PythonApp implements StreamingApplication
     return this;
   }
 
-  public void kill() throws IOException, YarnException
+  public void kill() throws Exception
   {
-    YarnClient yarnClient = YarnClient.createYarnClient();
-    yarnClient.init(this.conf);
-    yarnClient.start();
-    yarnClient.killApplication(appId);
-    yarnClient.stop();
+    if (manager == null) {
+      throw new Exception("Application Is not Launched yet");
+
+    }
+    manager.shutdown();
   }
 }

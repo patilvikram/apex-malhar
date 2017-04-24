@@ -5,9 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import com.datatorrent.api.DefaultOutputPort;
 
-/**
- * Created by vikram on 5/4/17.
- */
 public class PythonFilterOperator<T> extends PythonGenericOperator<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonFilterOperator.class);
@@ -17,24 +14,24 @@ public class PythonFilterOperator<T> extends PythonGenericOperator<T>
 
   public PythonFilterOperator()
   {
-    xFormType = OpType.FILTER;
+    operationType = OpType.FILTER;
   }
 
   public PythonFilterOperator(byte[] serializedFunc)
   {
     super(serializedFunc);
-    xFormType = OpType.FILTER;
+    operationType = OpType.FILTER;
   }
 
   @Override
   protected void processTuple(T tuple)
   {
-    LOG.info("Received Tuple " + tuple);
+    LOG.debug("Received Tuple " + tuple);
     Object result = pythonWorkerProxy.execute(tuple);
-    LOG.info("RECEIVED LIST RESULT " + result);
+    LOG.debug("RECEIVED LIST RESULT " + result);
     if (result instanceof Boolean) {
       Boolean b = (Boolean)result;
-      LOG.info("FILTER RESPONSE RECEIVED " + b);
+      LOG.debug("FILTER RESPONSE RECEIVED " + b);
       if ( b.booleanValue()) {
         out.emit(tuple);
       }

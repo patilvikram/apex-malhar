@@ -70,7 +70,7 @@ echo $MVN_GENERATED_PATH
 if [ -f "$MVN_GENERATED_PATH" ]; then
   # development launch mode
   echo $BUILD_DIR
-  DT_CORE_JAR="$BUILD_DIR/malhar-python-3.7.0-SNAPSHOT.jar"
+  DT_CORE_JAR="$BUILD_DIR/malhar-python-3.8.0-SNAPSHOT.jar"
   if [ ! -f "$DT_CORE_JAR" ]; then
     echoerr "Error: Cannot find $DT_CORE_JAR";
     exit 1;
@@ -97,11 +97,12 @@ fi
 APEXRUNERPID=0
 APEXRUNNERLOG="$( dirname "$0")/ApexRunner.out"
 rm -f $APEXRUNNERLOG
-echo $DT_CLASSPATH
-echo $HADOOP_CLASSPATH
-echo "Starting Apex Runner..."
+#echo $DT_CLASSPATH
+#echo $HADOOP_CLASSPATH
 if [ ! -x "$DT_HADOOP" ]; then
+  echo "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
+  echo "Starting Apex Runner without hadoop"
   export CLASSPATH=$DT_CLASSPATH
   "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1 &
   APEXRUNNERPID="$!"  
@@ -109,8 +110,7 @@ else
   export HADOOP_USER_CLASSPATH_FIRST=1
   # remove hadoop and duplicate slf4j binding (bash replace is too slow)
   export HADOOP_CLASSPATH=$(echo -n "$HADOOP_CLASSPATH" | tr ":" "\n" | sed "/slf4j-log4j/d" | sed "/org\/apache\/hadoop/d" | tr "\n" ":")
-  #"$DT_HADOOP" org.apache.apex.malhar.python.ApexPythonRunner "$@" >$APEXRUNNERLOG 2>&1 &
-  #"$DT_HADOOP" org.apache.apex.python.ApexPythonRunner "$@" >$APEXRUNNERLOG 2>&1 &
+  echo "Starting Apex Runner with hadoop" 
   "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1  &
   APEXRUNNERPID="$!"
 fi

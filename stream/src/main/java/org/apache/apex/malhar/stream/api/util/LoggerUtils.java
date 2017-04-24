@@ -21,11 +21,20 @@ public class LoggerUtils
     private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
     private InputStream is;
     private String name;
+    private StreamType streamType;
+    private String processId;
 
-    public InputStreamConsumer(String name, InputStream is)
+    public enum StreamType
+    {
+      ERROR, OUTPUT
+    }
+
+    public InputStreamConsumer(String name, InputStream is, StreamType streamType)
     {
       this.is = is;
       this.name = name;
+      this.streamType = streamType;
+//      this.processId = processId;
     }
 
     @Override
@@ -38,7 +47,12 @@ public class LoggerUtils
         BufferedReader br = new BufferedReader(isr);
         String line;
         while ((line = br.readLine()) != null) {
-          LOG.error(" From other process :" + line);
+          if (this.streamType == StreamType.ERROR) {
+            LOG.error(" From other process :" + line);
+          } else {
+            LOG.info(" From other process :" + line);
+
+          }
         }
       } catch (IOException exp) {
         exp.printStackTrace();
@@ -50,8 +64,8 @@ public class LoggerUtils
 
   public static void captureProcessStreams(Process process)
   {
-    InputStreamConsumer stdoutConsumer = new InputStreamConsumer("outputStream", process.getInputStream());
-    InputStreamConsumer erroConsumer = new InputStreamConsumer("errorStream", process.getErrorStream());
+    InputStreamConsumer stdoutConsumer = new InputStreamConsumer("outputStream", process.getInputStream(), InputStreamConsumer.StreamType.OUTPUT);
+    InputStreamConsumer erroConsumer = new InputStreamConsumer("errorStream", process.getErrorStream(), InputStreamConsumer.StreamType.ERROR);
     erroConsumer.start();
     stdoutConsumer.start();
   }

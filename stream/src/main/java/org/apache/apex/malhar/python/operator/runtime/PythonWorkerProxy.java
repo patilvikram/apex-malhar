@@ -21,9 +21,6 @@ package org.apache.apex.malhar.python.operator.runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Created by vikram on 3/3/17.
- */
 public class PythonWorkerProxy<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerProxy.class);
@@ -41,10 +38,16 @@ public class PythonWorkerProxy<T>
   {
     if (registerdPythonWorker != null) {
 
+      Object result = null;
       LOG.info("processing tuple " + tuple);
+      try {
+        result = registerdPythonWorker.execute(tuple);
+        LOG.info("processed tuple " + result);
+      } catch (Exception ex) {
 
-      Object result = registerdPythonWorker.execute(tuple);
-      LOG.info("processed tuple " + result);
+        LOG.error("Exception encountered while executing operation on tuple " + ex.getMessage() + "  StackTrace " + ex.getStackTrace());
+      }
+
       return result;
 
     }
@@ -63,7 +66,7 @@ public class PythonWorkerProxy<T>
   {
     if (this.isWorkerRegistered() && !isFunctionEnabled()) {
       LOG.info("Setting SERIALIZED FUNCTION");
-      this.registerdPythonWorker.setFunction(this.serializedFunction, opType );
+      this.registerdPythonWorker.setFunction(this.serializedFunction, opType);
       this.functionEnabled = true;
       LOG.info("Set SERIALIZED FUNCTION");
     }

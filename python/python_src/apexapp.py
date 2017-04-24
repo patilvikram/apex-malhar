@@ -38,6 +38,9 @@ class ShellConnector(object):
 
         return cls.instance
 
+    def get_jvm_gateway(self):
+        return self.gateway
+
     def get_entry_point(self):
         return self.gateway.entry_point
 
@@ -46,18 +49,35 @@ def createApp(name):
     shellConnector = ShellConnector()
     return ApexStreamingApp(name, shellConnector)
 
+def getApp(name):
+    shellConnector = ShellConnector()
+    java_app = shellConnector.get_entry_point().getAppByName(name)
 
+    return ApexStreamingApp(name, java_app=java_app )
+
+
+'''
+This is Python Wrapper Around ApexStreamingApp
+If java streaming app is not found then no apis can be called on this wrapper.
+
+'''
 class ApexStreamingApp():
     app_id = None
     streaming_factory = None
     apex_stream = None
     java_streaming_app = None
     instance_id = None
-
+    shell_connector = None  
     serialized_file_list = []
 
-    def __init__(self, name, shell_connector):
-        self.java_streaming_app = shell_connector.get_entry_point().createApp(name)
+    def __init__(self, name,shell_connector= None,java_app = None):
+        if  shell_connector is None and java_app is None  :
+            raise Exception("Invalid App initialization")
+        if java_app is None:
+            self.java_streaming_app = shell_connector.get_entry_point().createApp(name)
+        else:
+            self.java_streaming_app = java_app
+        self.shell_connector = shell_connector
         self.instance_id = uuid1().urn[9:]
 
     '''
@@ -110,6 +130,18 @@ class ApexStreamingApp():
         self.java_streaming_app = self.java_streaming_app.setFilter(name, serialized_func)
         return self
 
+    def fromData(self, data ):
+        if not isinstance(data, list):
+            raise Exception
+        data_for_java = self.shell_connector.get_jvm_gateway().jvm.java.util.ArrayList()
+        types_data = [int, float, str, bool, function, tuple, dict ]
+
+        for d in data:
+            if type(d) in types_data:
+                data_for_java.append(d)
+        self.java_streaming_app = self.java_streaming_app.fromData( data_for_java )
+        return self
+
     def launch(self, local):
         try:
             self.app_id = self.java_streaming_app.launch(local)
@@ -118,6 +150,9 @@ class ApexStreamingApp():
             import traceback
             traceback.print_exc()
             print e.java_exception.getMessage()
+
+    def kill(self):
+        self.java_streaming_app = self.java_streaming_app.kill()
 
     def setConfig(self, key, value):
         self.java_streaming_app = self.java_streaming_app.setConfig(key, value)
