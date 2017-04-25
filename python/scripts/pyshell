@@ -20,6 +20,14 @@
 
 
 # Support functions
+
+# TODO :
+# ACCEPTED ARGUMENTS:
+# shell
+# launch input_python.py
+# kill app-id
+# shutdown app-id
+
 echoerr() { echo "$@" 1>&2; }
 real_dir() {
   SOURCE="${1:-${BASH_SOURCE[0]}}"
@@ -117,7 +125,6 @@ fi
 sleep 5
 echo "Apex Runner is started as process id: " $APEXRUNNERPID
 
-#source "$PYTHON_ENV_PATH/activate"
 PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
 
 if ! kill $APEXRUNNERPID > /dev/null 2>&1; then

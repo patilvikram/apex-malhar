@@ -42,20 +42,8 @@ public class PythonAppManager
     try {
       if (mode == LaunchMode.LOCAL) {
         LocalMode lma = LocalMode.newInstance();
-
         lma.prepareDAG(app, app.getConf());
-
         LocalMode.Controller lc = lma.getController();
-//      ((StramLocalCluster)lc).setExitCondition(new Callable<Boolean>()
-//      {
-//        @Override
-//        public Boolean call() throws Exception
-//        {
-//          return endApp;
-//        }
-//      });
-
-//      lc.run(200000); // runs for 20 seconds and quits if terminating condition not reached
         lc.runAsync();
         appIdenfier = lc;
         return "LocalMode";

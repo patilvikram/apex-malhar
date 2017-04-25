@@ -29,13 +29,13 @@ gateway = None
 class WorkerImpl(object):
     serialized_f = None
     callable_f = None
-    xformType = None
+    opType = None
 
-    def __init__(self, gateway, xformType):
+    def __init__(self, gateway, opType):
         self.gateway = gateway
-        self.xformType = xformType
+        self.opType = opType
 
-    def setFunction(self, f, xformType):
+    def setFunction(self, f, opType):
         try:
             import os, imp
 
@@ -43,7 +43,7 @@ class WorkerImpl(object):
             # serialized_f = f.decode('ascii')
 
             self.callable_f = cloudpickle.loads(f)
-            self.xformType = xformType
+            self.opType = opType
         except ValueError as e:
             print str(e)
             from traceback import print_exc
@@ -54,16 +54,15 @@ class WorkerImpl(object):
         return "RETURN VALUE"
 
     def execute(self, tupleIn):
-        print "Executing for tuple", tupleIn, self.xformType
+        print "Executing for tuple", tupleIn, self.opType
         try:
             result = self.callable_f(tupleIn)
-            if self.xformType == 'MAP':
+            if self.opType == 'MAP':
                 return result
-            elif self.xformType == 'FLAT_MAP':
+            elif self.opType == 'FLAT_MAP':
                 from py4j.java_collections import SetConverter, MapConverter, ListConverter
                 return ListConverter().convert(result, self.gateway._gateway_client)
-
-            elif self.xformType == 'FILTER':
+            elif self.opType == 'FILTER':
                 if type(result) != bool:
                         result = True if result is not None else False
                 return result

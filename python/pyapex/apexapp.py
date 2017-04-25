@@ -64,7 +64,6 @@ If java streaming app is not found then no apis can be called on this wrapper.
 class ApexStreamingApp():
     app_id = None
     streaming_factory = None
-    apex_stream = None
     java_streaming_app = None
     instance_id = None
     shell_connector = None  
@@ -135,7 +134,6 @@ class ApexStreamingApp():
             raise Exception
         data_for_java = self.shell_connector.get_jvm_gateway().jvm.java.util.ArrayList()
         types_data = [int, float, str, bool, function, tuple, dict ]
-
         for d in data:
             if type(d) in types_data:
                 data_for_java.append(d)
@@ -152,7 +150,7 @@ class ApexStreamingApp():
             print e.java_exception.getMessage()
 
     def kill(self):
-        self.java_streaming_app = self.java_streaming_app.kill()
+        return self.java_streaming_app.kill()
 
     def setConfig(self, key, value):
         self.java_streaming_app = self.java_streaming_app.setConfig(key, value)

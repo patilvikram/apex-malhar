@@ -56,9 +56,7 @@ public class PyApex
       try {
 
         YarnClient client = YarnClient.createYarnClient();
-
         List<ApplicationReport> apps = client.getApplications();
-
         for (ApplicationReport appReport : apps) {
           if (appReport.getName().equals(name) ) {
             LOG.debug("Application Name: {} Application ID: {} Application State: {}", appReport.getName(), appReport.getApplicationId().toString(), appReport.getYarnApplicationState());

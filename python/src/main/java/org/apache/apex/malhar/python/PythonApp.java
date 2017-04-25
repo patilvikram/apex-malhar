@@ -76,11 +76,7 @@ public class PythonApp implements StreamingApplication
   public void populateDAG(DAG dag, Configuration conf)
   {
 
-    // add SERIALIZED CODE TO LIB JARS
-    // add Worker.py
-
-    LOG.error("Populating DAG in python app");
-
+    LOG.trace("Populating DAG in python app");
     this.apexStream.populateDag(dag);
 
   }
