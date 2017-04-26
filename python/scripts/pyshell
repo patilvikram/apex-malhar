@@ -66,9 +66,9 @@ fi
 
 export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 
-BUILD_DIR="$( dirname "$0" )/../../../target"
 BUILD_DIR="$( dirname "$0" )/../target"
-echo $BUILD_DIR
+PYAPEX_HOME="`pwd`/../pyapex"
+echo $APEX_PYTHON_RUNTIME
 if [ -z "$DT_HADOOP" ]; then
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
 else
@@ -124,7 +124,6 @@ else
 fi
 sleep 5
 echo "Apex Runner is started as process id: " $APEXRUNNERPID
-
 PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
 
 if ! kill $APEXRUNNERPID > /dev/null 2>&1; then

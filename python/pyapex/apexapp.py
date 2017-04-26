@@ -49,11 +49,12 @@ def createApp(name):
     shellConnector = ShellConnector()
     return ApexStreamingApp(name, shellConnector)
 
+
 def getApp(name):
     shellConnector = ShellConnector()
     java_app = shellConnector.get_entry_point().getAppByName(name)
 
-    return ApexStreamingApp(name, java_app=java_app )
+    return ApexStreamingApp(name, java_app=java_app)
 
 
 '''
@@ -61,16 +62,18 @@ This is Python Wrapper Around ApexStreamingApp
 If java streaming app is not found then no apis can be called on this wrapper.
 
 '''
+
+
 class ApexStreamingApp():
     app_id = None
     streaming_factory = None
     java_streaming_app = None
     instance_id = None
-    shell_connector = None  
+    shell_connector = None
     serialized_file_list = []
 
-    def __init__(self, name,shell_connector= None,java_app = None):
-        if  shell_connector is None and java_app is None  :
+    def __init__(self, name, shell_connector=None, java_app=None):
+        if shell_connector is None and java_app is None:
             raise Exception("Invalid App initialization")
         if java_app is None:
             self.java_streaming_app = shell_connector.get_entry_point().createApp(name)
@@ -94,9 +97,20 @@ class ApexStreamingApp():
     def fromKafka09(self, zoopkeepers, topic):
         self.java_streaming_app = self.java_streaming_app.fromKafka09(zoopkeepers, topic)
         return self
-
     def toConsole(self, name=None):
         self.java_streaming_app = self.java_streaming_app.toConsole(name)
+        return self
+
+    def toKafka08(self, name=None, topic=None, brokerList=None, **kwargs):
+        properties = {}
+        if brokerList is not None:
+            properties['bootstrap.servers'] = brokerList
+        for key in kwargs.keys():
+            properties[key] = kwargs[key]
+        property_map = self.shell_connector.get_jvm_gateway().jvm.java.util.HashMap()
+        for key in properties.keys():
+            property_map.put(key, properties[key])
+        self.java_streaming_app = self.java_streaming_app.toKafka08(name, topic, property_map)
         return self
 
     def map(self, name, func):
@@ -114,7 +128,7 @@ class ApexStreamingApp():
         self.java_streaming_app = self.java_streaming_app.setMap(name, serialized_func)
         return self
 
-    def setFlatMap(self, name, func,):
+    def setFlatMap(self, name, func, ):
         if not isinstance(func, types.FunctionType):
             raise Exception
 
@@ -129,15 +143,15 @@ class ApexStreamingApp():
         self.java_streaming_app = self.java_streaming_app.setFilter(name, serialized_func)
         return self
 
-    def fromData(self, data ):
+    def fromData(self, data):
         if not isinstance(data, list):
             raise Exception
         data_for_java = self.shell_connector.get_jvm_gateway().jvm.java.util.ArrayList()
-        types_data = [int, float, str, bool, function, tuple, dict ]
+        types_data = [int, float, str, bool, tuple, dict]
         for d in data:
             if type(d) in types_data:
                 data_for_java.append(d)
-        self.java_streaming_app = self.java_streaming_app.fromData( data_for_java )
+        self.java_streaming_app = self.java_streaming_app.fromData(data_for_java)
         return self
 
     def launch(self, local):
@@ -164,4 +178,3 @@ class ApexStreamingApp():
         temp_file.write(serialized_func)
         temp_file.name = "pythonapp_ " + self.instance_id + "_opr_" + name + ".ser"
         return serialized_func, temp_file
-

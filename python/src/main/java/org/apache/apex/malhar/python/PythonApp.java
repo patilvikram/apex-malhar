@@ -18,8 +18,12 @@
  */
 package org.apache.apex.malhar.python;
 
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +37,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
+import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
 import com.datatorrent.stram.client.StramAppLauncher;
 
 public class PythonApp implements StreamingApplication
@@ -83,18 +88,37 @@ public class PythonApp implements StreamingApplication
 
   public void setRequiredJARFiles()
   {
-    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
+    String APEX_DIRECTORY_PATH = System.getenv("PYAPEX_HOME");
+    File dir = new File(APEX_DIRECTORY_PATH + "/jars/");
+    File[] files = dir.listFiles();
     ArrayList<String> jarFiles = new ArrayList<String>();
-    jarFiles.add(APEX_DIRECTORY_PATH + "/jars/py4j-0.10.4.jar");
-    jarFiles.add(APEX_DIRECTORY_PATH + "/jars/malhar-python-3.7.0-SNAPSHOT.jar");
+    for (File jarFile : files) {
+      LOG.info("FOUND FILES " + jarFile.getAbsolutePath());
+      jarFiles.add(jarFile.getAbsolutePath());
+
+    }
     jarFiles.add(APEX_DIRECTORY_PATH + "/runtime/" + py4jSrcZip);
     jarFiles.add(APEX_DIRECTORY_PATH + "/runtime/worker.py");
     extendExistingConfig(StramAppLauncher.LIBJARS_CONF_KEY_NAME, jarFiles);
+//    this.getClassPaths();
+  }
+
+  public List<String> getClassPaths()
+  {
+    LOG.info("PROCESSING CLASSPATH");
+    List<String> paths = new ArrayList<>();
+    ClassLoader cl = ClassLoader.getSystemClassLoader();
+    URL[] urls = ((URLClassLoader)cl).getURLs();
+    for (URL url : urls) {
+      LOG.info("FOUND FILE PATH" + url.getFile());
+      paths.add(url.getFile());
+    }
+    return paths;
   }
 
   public void setRequiredRuntimeFiles()
   {
-    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
+    String APEX_DIRECTORY_PATH = System.getenv("PYAPEX_HOME");
     ArrayList<String> files = new ArrayList<String>();
     files.add(APEX_DIRECTORY_PATH + "/runtime/" + py4jSrcZip);
     files.add(APEX_DIRECTORY_PATH + "/runtime/worker.py");
@@ -209,6 +233,22 @@ public class PythonApp implements StreamingApplication
     return this;
   }
 
+  public PythonApp toKafka08(String name, String topic, Map<String, String> properties)
+  {
+    KafkaSinglePortOutputOperator kafkaOutputOperator = new KafkaSinglePortOutputOperator();
+    kafkaOutputOperator.setTopic(topic);
+    List<String> propertyList = new ArrayList<String>();
+    for (String key : properties.keySet()) {
+      propertyList.add(key + "=" + properties.get(key));
+    }
+
+    String producerConfigs = StringUtils.join(propertyList, ",");
+    LOG.debug("PropertyList for kafka producer" + producerConfigs);
+    kafkaOutputOperator.setProducerProperties(producerConfigs);
+    apexStream = apexStream.endWith(kafkaOutputOperator, kafkaOutputOperator.inputPort, Option.Options.name(name));
+    return this;
+  }
+
   public PythonApp setConfig(String key, String value)
   {
     getConf().set(key, value);
@@ -218,7 +258,7 @@ public class PythonApp implements StreamingApplication
   public void kill() throws Exception
   {
     if (manager == null) {
-      throw new Exception("Application Is not Launched yet");
+      throw new Exception("Application is not running yet");
 
     }
     manager.shutdown();
