@@ -22,9 +22,7 @@ import com.datatorrent.stram.client.StramAppLauncher;
 import com.datatorrent.stram.plan.logical.LogicalPlan;
 import com.datatorrent.stram.plan.logical.LogicalPlanConfiguration;
 
-/**
- * Created by vikram on 22/2/17.
- */
+
 public class PythonAppFactory implements StramAppLauncher.AppFactory
 {
   private PythonApp streamingApp;

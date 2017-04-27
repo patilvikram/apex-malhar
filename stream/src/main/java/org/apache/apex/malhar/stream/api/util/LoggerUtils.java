@@ -10,9 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 
-/**
- * Created by vikram on 31/3/17.
- */
 public class LoggerUtils
 {
 
@@ -34,7 +31,6 @@ public class LoggerUtils
       this.is = is;
       this.name = name;
       this.streamType = streamType;
-//      this.processId = processId;
     }
 
     @Override

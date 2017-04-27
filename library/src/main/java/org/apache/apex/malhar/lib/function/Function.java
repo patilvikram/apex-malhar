@@ -85,16 +85,4 @@ public interface Function
     boolean f(T input);
   }
 
-
-
-  /**
-   * An interface defines a one input one output transformation
-   * @param <I>
-   * @param <O>
-   */
-  public static interface WrapperFunction<I, O> extends Function
-  {
-    O f(I input);
-  }
-
 }

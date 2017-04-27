@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import com.datatorrent.api.LocalMode;
 import com.datatorrent.stram.client.StramAppLauncher;
 
-/**
- * Created by vikram on 24/4/17.
- */
 public class PythonAppManager
 {
   private LaunchMode mode;

@@ -16,10 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  *
- * Created by vikram on 15/2/17.
- */
-/**
- * Created by vikram on 15/2/17.
  */
 
 package org.apache.apex.malhar.python;
