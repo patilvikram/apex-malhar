@@ -117,14 +117,14 @@ class ApexStreamingApp():
         if not isinstance(func, types.FunctionType):
             raise Exception
 
-        serialized_func, file_name = self.get_serialized_file_name(name, func)
+        serialized_func = self.get_serialized_file_name(name, func)
         self.java_streaming_app = self.java_streaming_app.setMap(name, serialized_func)
         return self
 
     def setMap(self, name, func):
         if not isinstance(func, types.FunctionType):
             raise Exception
-        serialized_func, file_name = self.get_serialized_file_name(name, func)
+        serialized_func  = self.get_serialized_file_name(name, func)
         self.java_streaming_app = self.java_streaming_app.setMap(name, serialized_func)
         return self
 
@@ -132,14 +132,14 @@ class ApexStreamingApp():
         if not isinstance(func, types.FunctionType):
             raise Exception
 
-        serialized_func, file_name = self.get_serialized_file_name(name, func)
+        serialized_func  = self.get_serialized_file_name(name, func)
         self.java_streaming_app = self.java_streaming_app.setFlatMap(name, serialized_func)
         return self
 
     def setFilter(self, name, func):
         if not isinstance(func, types.FunctionType):
             raise Exception
-        serialized_func, file_name = self.get_serialized_file_name(name, func)
+        serialized_func = self.get_serialized_file_name(name, func)
         self.java_streaming_app = self.java_streaming_app.setFilter(name, serialized_func)
         return self
 
@@ -174,7 +174,7 @@ class ApexStreamingApp():
 
         serialized_func = bytearray()
         serialized_func.extend(cloudpickle.dumps(func))
-        temp_file = NamedTemporaryFile()
-        temp_file.write(serialized_func)
-        temp_file.name = "pythonapp_ " + self.instance_id + "_opr_" + name + ".ser"
-        return serialized_func, temp_file
+        # temp_file = NamedTemporaryFile()
+        # temp_file.write(serialized_func)
+        # temp_file.name = "pythonapp_ " + self.instance_id + "_opr_" + name + ".ser"
+        return serialized_func

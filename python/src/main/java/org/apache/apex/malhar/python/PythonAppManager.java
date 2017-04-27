@@ -34,7 +34,6 @@ public class PythonAppManager
   {
 
     LOG.error("Launching app in python app");
-    String APEX_DIRECTORY_PATH = System.getenv("APEX_HOME");
 
     try {
       if (mode == LaunchMode.LOCAL) {
