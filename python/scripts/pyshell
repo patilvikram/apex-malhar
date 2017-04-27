@@ -68,7 +68,6 @@ export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 
 BUILD_DIR="$( dirname "$0" )/../target"
 PYAPEX_HOME="`pwd`/../pyapex"
-echo $APEX_PYTHON_RUNTIME
 if [ -z "$DT_HADOOP" ]; then
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
 else
