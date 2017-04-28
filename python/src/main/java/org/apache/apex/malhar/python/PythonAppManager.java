@@ -2,15 +2,25 @@ package org.apache.apex.malhar.python;
 
 import java.io.IOException;
 
+import javax.ws.rs.core.MediaType;
+
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
+import com.sun.jersey.api.client.WebResource;
+
 import com.datatorrent.api.LocalMode;
+import com.datatorrent.stram.cli.ApexCli;
+import com.datatorrent.stram.client.StramAgent;
 import com.datatorrent.stram.client.StramAppLauncher;
+import com.datatorrent.stram.util.WebServicesClient;
+import com.datatorrent.stram.webapp.StramWebServices;
 
 public class PythonAppManager
 {
@@ -74,6 +84,29 @@ public class PythonAppManager
         e.printStackTrace();
       }
 
+    }
+  }
+
+  public void test(){
+
+    for (ApplicationReport app : apps) {
+      try {
+        JSONObject response = getResource(new StramAgent.StramUriSpec().path(StramWebServices.PATH_SHUTDOWN), app, new WebServicesClient.WebServicesHandler<JSONObject>()
+        {
+          @Override
+          public JSONObject process(WebResource.Builder webResource, Class<JSONObject> clazz)
+          {
+            return webResource.accept(MediaType.APPLICATION_JSON).post(clazz, new JSONObject());
+          }
+
+        });
+        if (consolePresent) {
+          System.out.println("Shutdown requested: " + response);
+        }
+        currentApp = null;
+      } catch (Exception e) {
+        throw new ApexCli.CliException("Failed to request shutdown for appid " + app.getApplicationId().toString(), e);
+      }
     }
   }
 }

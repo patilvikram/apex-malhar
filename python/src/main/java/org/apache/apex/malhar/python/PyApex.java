@@ -68,6 +68,26 @@ public class PyApex
 
   }
 
+  public PythonApp getAppById(String id)
+  {
+    if (streamApp == null) {
+      try {
+        YarnClient client = YarnClient.createYarnClient();
+        List<ApplicationReport> apps = client.getApplications();
+        for (ApplicationReport appReport : apps) {
+          if (appReport.getApplicationId().toString().equals(id)) {
+            LOG.debug("Application Name: {} Application ID: {} Application State: {}", appReport.getName(), appReport.getApplicationId().toString(), appReport.getYarnApplicationState());
+            return new PythonApp(appReport.getName(), appReport.getApplicationId());
+          }
+        }
+      } catch (Exception e) {
+        throw new Py4JException("Error getting application list from resource manager", e);
+
+      }
+    }
+    return null;
+  }
+
   public static void main(String[] args)
   {
     PyApex pythonEntryPoint = new PyApex();
