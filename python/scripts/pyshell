@@ -28,7 +28,34 @@
 # kill app-id
 # shutdown app-id
 
+usage() { echo "Usage: $0 [-sh] [-l <python program file>] [-k <app-id>] [-t <app-id>]" 1>&2; exit 1; }
+COMMAND_MODE='SHELL_MODE' 
+EXECUTABLE_FILE=false
+while getopts ":s:l:k:t" o; do
+    case "${o}" in
+        s)
+            s=${OPTARG}
+            COMMAND_MODE="SHELL_MODE"
+            ;;
+        l)
+            EXECUTABLE_FILE=${OPTARG}
+            COMMAND_MODE="LAUNCH_MODE"
+            ;;
+        9)
+             usage 
+             echo "NOT IMPLEMENTTED YET"
+            ;;
+        sh) 
+            usage
+            echo "NOT IMPLEMENTTED YET"
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
 echoerr() { echo "$@" 1>&2; }
+rm pyapex
 real_dir() {
   SOURCE="${1:-${BASH_SOURCE[0]}}"
   while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -128,7 +155,15 @@ else
 fi
 sleep 5
 echo "Apex Runner is started as process id: " $APEXRUNNERPID
-PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
+if [ "$COMMAND_MODE" = "SHELL_MODE" ]
+then
+   PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
+elif [ "$COMMAND_MODE" = "LAUNCH_MODE" ]
+then
+   echo $EXECUTABLE_FILE
+   PYTHONPATH=$PYTHONPATH:"python" python "$EXECUTABLE_FILE" 
+   
+fi
 if ! kill $APEXRUNNERPID > /dev/null 2>&1; then
   echo "Could not send SIGTERM to process $PID. Force killing" >/dev/null >&2
   kill -9 $APEXRUNNERPID >/dev/null 2>&1 

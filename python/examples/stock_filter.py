@@ -7,8 +7,8 @@ def f(a):
   return False
 
 from pyapex import createApp
-a=createApp('python_app').fromKafka08('localhost:2181','test_topic')
-  \.setFilter('filter_operator',f)
-  \.toConsole(name='endConsole')
-  \.launch(False)
+a=createApp('python_app').fromKafka08('localhost:2181','test_topic') \
+  .setFilter('filter_operator',f) \
+  .toConsole(name='endConsole') \
+  .launch(False)
 
