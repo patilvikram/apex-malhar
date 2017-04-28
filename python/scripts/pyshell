@@ -41,11 +41,11 @@ while getopts ":s:l:k:t" o; do
             EXECUTABLE_FILE=${OPTARG}
             COMMAND_MODE="LAUNCH_MODE"
             ;;
-        9)
-             usage 
-             echo "NOT IMPLEMENTTED YET"
+        k)  
+            APP_NAME=${OPTARG}
+            COMMAND_MODE="KILL_MODE"
             ;;
-        sh) 
+        t) 
             usage
             echo "NOT IMPLEMENTTED YET"
             ;;
@@ -159,13 +159,16 @@ sleep 5
 echo "Apex Runner is started as process id: " $APEXRUNNERPID
 if [ "$COMMAND_MODE" = "SHELL_MODE" ]
 then
-   PYTHONPATH=$PYTHONPATH:"python" python "$@"
+   PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
 elif [ "$COMMAND_MODE" = "LAUNCH_MODE" ]
 then
    echo $EXECUTABLE_FILE
    PYTHONPATH=$PYTHONPATH:"python" python "$EXECUTABLE_FILE" 
    
-fi
+elif [ "$COMMAND_MODE" = "KILL_MODE" ]
+then 
+   PYTHONPATH=$PYTHONPATH:"python" python "$PYAPEX_HOME/commands.py" "-k $APP_NAME"
+fi    
 if ! kill $APEXRUNNERPID > /dev/null 2>&1; then
   echo "Could not send SIGTERM to process $PID. Force killing" >/dev/null >&2
   kill -9 $APEXRUNNERPID >/dev/null 2>&1 

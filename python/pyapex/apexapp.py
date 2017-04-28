@@ -62,8 +62,6 @@ This is Python Wrapper Around ApexStreamingApp
 If java streaming app is not found then no apis can be called on this wrapper.
 
 '''
-
-
 class ApexStreamingApp():
     app_id = None
     streaming_factory = None
