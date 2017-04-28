@@ -55,7 +55,11 @@ while getopts ":s:l:k:t" o; do
     esac
 done
 echoerr() { echo "$@" 1>&2; }
-rm pyapex
+if [ -e "pyapex" ]
+then 
+  rm pyapex
+fi
+
 real_dir() {
   SOURCE="${1:-${BASH_SOURCE[0]}}"
   while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -100,10 +104,8 @@ if [ -z "$DT_HADOOP" ]; then
 else
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath-no-hadoop"
 fi
-echo $MVN_GENERATED_PATH
 if [ -f "$MVN_GENERATED_PATH" ]; then
   # development launch mode
-  echo $BUILD_DIR
   DT_CORE_JAR="$BUILD_DIR/malhar-python-3.8.0-SNAPSHOT.jar"
   if [ ! -f "$DT_CORE_JAR" ]; then
     echoerr "Error: Cannot find $DT_CORE_JAR";
@@ -135,7 +137,7 @@ rm -f $APEXRUNNERLOG
 #echo $HADOOP_CLASSPATH
 export PYAPEX_HOME=$PYAPEX_HOME
 cp $BUILD_DIR/lib/* $PYAPEX_HOME/jars
-echo "Intiating PYSHELL now " $PYAPEX_HOME
+echo "Intiating PYSHELL now " 
 
 ln -sf $PYAPEX_HOME "$script_dir/pyapex"
 if [ ! -x "$DT_HADOOP" ]; then
@@ -168,4 +170,7 @@ if ! kill $APEXRUNNERPID > /dev/null 2>&1; then
   echo "Could not send SIGTERM to process $PID. Force killing" >/dev/null >&2
   kill -9 $APEXRUNNERPID >/dev/null 2>&1 
 fi
-rm pyapex
+if [ -e pyapex ]
+then
+  rm pyapex
+fi
