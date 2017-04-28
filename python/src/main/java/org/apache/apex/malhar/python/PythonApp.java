@@ -174,6 +174,11 @@ public class PythonApp implements StreamingApplication
     return manager.launch();
   }
 
+  public void runLocal()
+  {
+    this.apexStream.runEmbedded(true, 0, null);
+  }
+
   public ApexStream getApexStream()
   {
     return apexStream;

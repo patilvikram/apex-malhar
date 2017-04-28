@@ -37,11 +37,7 @@ public class PythonAppManager
 
     try {
       if (mode == LaunchMode.LOCAL) {
-        LocalMode lma = LocalMode.newInstance();
-        lma.prepareDAG(app, app.getConf());
-        LocalMode.Controller lc = lma.getController();
-        lc.runAsync();
-        appIdenfier = lc;
+        app.runLocal();
         return "LocalMode";
       } else {
         StramAppLauncher appLauncher = null;

@@ -3,7 +3,6 @@ package org.apache.apex.malhar.python.operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class PythonMapOperator<T> extends PythonGenericOperator<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonMapOperator.class);
@@ -24,6 +23,9 @@ public class PythonMapOperator<T> extends PythonGenericOperator<T>
   {
     LOG.info("Received Tuple " + tuple);
     Object result = pythonWorkerProxy.execute(tuple);
-    out.emit((T)result);
+    if (result != null) {
+      out.emit((T)result);
+    }
+
   }
 }

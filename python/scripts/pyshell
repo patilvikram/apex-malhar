@@ -159,7 +159,7 @@ sleep 5
 echo "Apex Runner is started as process id: " $APEXRUNNERPID
 if [ "$COMMAND_MODE" = "SHELL_MODE" ]
 then
-   PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
+   PYTHONPATH=$PYTHONPATH:"python" python "$@"
 elif [ "$COMMAND_MODE" = "LAUNCH_MODE" ]
 then
    echo $EXECUTABLE_FILE

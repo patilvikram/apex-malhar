@@ -154,9 +154,9 @@ class ApexStreamingApp():
         self.java_streaming_app = self.java_streaming_app.fromData(data_for_java)
         return self
 
-    def launch(self, local):
+    def launch(self, local_mode=False):
         try:
-            self.app_id = self.java_streaming_app.launch(local)
+            self.app_id = self.java_streaming_app.launch(local_mode)
             return self.app_id
         except Py4JJavaError as e:
             import traceback
