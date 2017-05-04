@@ -21,6 +21,8 @@ package org.apache.apex.malhar.python.operator.runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import py4j.Py4JException;
+
 public class PythonWorkerProxy<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerProxy.class);
@@ -39,13 +41,12 @@ public class PythonWorkerProxy<T>
     if (registerdPythonWorker != null) {
 
       Object result = null;
-      LOG.info("processing tuple " + tuple);
+      LOG.trace("Processing tuple:" + tuple);
       try {
         result = registerdPythonWorker.execute(tuple);
-        LOG.info("processed tuple " + result);
-      } catch (Exception ex) {
-
-        LOG.error("Exception encountered while executing operation on tuple " + ex.getMessage() + "  StackTrace " + ex.getStackTrace());
+        LOG.trace("Processed tuple:" + result);
+      } catch (Py4JException ex) {
+        LOG.error("Exception encountered while executing operation for tuple:" + tuple + " Message:" + ex.getMessage());
       }
 
       return result;
@@ -56,19 +57,19 @@ public class PythonWorkerProxy<T>
 
   public void register(PythonWorker pythonWorker)
   {
-    LOG.info("Registering python worker now ");
+    LOG.debug("Registering python worker now");
     this.registerdPythonWorker = pythonWorker;
     this.workerRegistered = true;
-    LOG.info("Python worker registered ");
+    LOG.debug("Python worker registered");
   }
 
   public void setFunction(String opType)
   {
     if (this.isWorkerRegistered() && !isFunctionEnabled()) {
-      LOG.info("Setting SERIALIZED FUNCTION");
+      LOG.debug("Setting SERIALIZED FUNCTION");
       this.registerdPythonWorker.setFunction(this.serializedFunction, opType);
       this.functionEnabled = true;
-      LOG.info("Set SERIALIZED FUNCTION");
+      LOG.debug("Set SERIALIZED FUNCTION");
     }
   }
 
