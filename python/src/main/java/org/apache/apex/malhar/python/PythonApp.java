@@ -90,6 +90,7 @@ public class PythonApp implements StreamingApplication
   public void setRequiredJARFiles()
   {
     String APEX_DIRECTORY_PATH = System.getenv("PYAPEX_HOME");
+    LOG.debug("PYAPEX_HOME:" + APEX_DIRECTORY_PATH);
     File dir = new File(APEX_DIRECTORY_PATH + "/jars/");
     File[] files = dir.listFiles();
     ArrayList<String> jarFiles = new ArrayList<String>();
@@ -253,9 +254,10 @@ public class PythonApp implements StreamingApplication
   public PythonApp toFolder(String name, String fileName, String directoryName)
   {
 
-    GenericFileOutputOperator<byte[]> outputOperator = new GenericFileOutputOperator<>();
+    GenericFileOutputOperator<String> outputOperator = new GenericFileOutputOperator<>();
     outputOperator.setFilePath(directoryName);
     outputOperator.setOutputFileName(fileName);
+    outputOperator.setConverter(new GenericFileOutputOperator.StringToBytesConverter());
     apexStream = apexStream.endWith(outputOperator, outputOperator.input, Option.Options.name(name));
     return this;
   }

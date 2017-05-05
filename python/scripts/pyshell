@@ -68,6 +68,7 @@ export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 
 BUILD_DIR="$( dirname "$0" )/../target"
 PYAPEX_HOME="`pwd`/../pyapex"
+echo "PYAPEX HOME :$PYAPEX_HOME"
 if [ -z "$DT_HADOOP" ]; then
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
 else
@@ -106,6 +107,7 @@ APEXRUNNERLOG="$( dirname "$0")/ApexRunner.out"
 rm -f $APEXRUNNERLOG
 #echo $DT_CLASSPATH
 #echo $HADOOP_CLASSPATH
+export PYAPEX_HOME="`pwd`/../pyapex"
 if [ ! -x "$DT_HADOOP" ]; then
   echo "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
