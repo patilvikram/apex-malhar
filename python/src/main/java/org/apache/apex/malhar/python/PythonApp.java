@@ -250,7 +250,7 @@ public class PythonApp implements StreamingApplication
     return this;
   }
 
-  public PythonApp toFolder(String name, String directoryName, String fileName)
+  public PythonApp toFolder(String name, String fileName, String directoryName)
   {
 
     GenericFileOutputOperator<byte[]> outputOperator = new GenericFileOutputOperator<>();
