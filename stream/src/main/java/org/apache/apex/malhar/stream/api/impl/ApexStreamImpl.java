@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -484,7 +484,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
   }
-
 
   @Override
   public ApexStreamImpl<T> flatmap_func(byte[] serializedFunction, Option... opts)
