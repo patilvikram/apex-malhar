@@ -111,6 +111,15 @@ class ApexStreamingApp():
         self.java_streaming_app = self.java_streaming_app.toKafka08(name, topic, property_map)
         return self
 
+    def toFolder(self, name,file_name, directory_name, **kwargs):
+        properties = {}
+        if file_name is None or directory_name is None:
+            raise Exception("Invalid Directory Name")
+
+
+        self.java_streaming_app = self.java_streaming_app.toFolder( name, file_name, directory_name )
+        return self
+
     def map(self, name, func):
         if not isinstance(func, types.FunctionType):
             raise Exception

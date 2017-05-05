@@ -28,6 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
@@ -89,6 +90,7 @@ public class PythonApp implements StreamingApplication
   public void setRequiredJARFiles()
   {
     String APEX_DIRECTORY_PATH = System.getenv("PYAPEX_HOME");
+    LOG.debug("PYAPEX_HOME:" + APEX_DIRECTORY_PATH);
     File dir = new File(APEX_DIRECTORY_PATH + "/jars/");
     File[] files = dir.listFiles();
     ArrayList<String> jarFiles = new ArrayList<String>();
@@ -251,6 +253,17 @@ public class PythonApp implements StreamingApplication
     LOG.debug("PropertyList for kafka producer" + producerConfigs);
     kafkaOutputOperator.setProducerProperties(producerConfigs);
     apexStream = apexStream.endWith(kafkaOutputOperator, kafkaOutputOperator.inputPort, Option.Options.name(name));
+    return this;
+  }
+
+  public PythonApp toFolder(String name, String fileName, String directoryName)
+  {
+
+    GenericFileOutputOperator<String> outputOperator = new GenericFileOutputOperator<>();
+    outputOperator.setFilePath(directoryName);
+    outputOperator.setOutputFileName(fileName);
+    outputOperator.setConverter(new GenericFileOutputOperator.StringToBytesConverter());
+    apexStream = apexStream.endWith(outputOperator, outputOperator.input, Option.Options.name(name));
     return this;
   }
 

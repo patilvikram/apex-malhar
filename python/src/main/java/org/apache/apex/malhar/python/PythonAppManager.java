@@ -15,7 +15,7 @@ import com.datatorrent.stram.client.StramAppLauncher;
 public class PythonAppManager
 {
   private LaunchMode mode;
-  private Object appIdenfier;
+  private Object appIdentifier;
   private PythonApp app = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
 
@@ -46,12 +46,15 @@ public class PythonAppManager
 
         PythonAppFactory appFactory = new PythonAppFactory(app.getName(), app);
 
-        this.appIdenfier = appLauncher.launchApp(appFactory);
-        return this.appIdenfier.toString();
+        this.appIdentifier = appLauncher.launchApp(appFactory);
+        return this.appIdentifier.toString();
       }
 
     } catch (Exception e) {
       e.printStackTrace();
+
+      LOG.error("FAILED TO LAUNCH PYTHON STREAMING APPLICATION ");
+      LOG.error("Encountered Exception " + e.getMessage());
     }
     return null;
   }
@@ -59,19 +62,22 @@ public class PythonAppManager
   public void shutdown()
   {
     if (mode == LaunchMode.LOCAL) {
-      ((LocalMode.Controller)this.appIdenfier).shutdown();
+      ((LocalMode.Controller)this.appIdentifier).shutdown();
     } else {
       try {
         YarnClient yarnClient = YarnClient.createYarnClient();
         yarnClient.init(app.getConf());
         yarnClient.start();
 
-        yarnClient.killApplication((ApplicationId)this.appIdenfier);
+        yarnClient.killApplication((ApplicationId)this.appIdentifier);
         yarnClient.stop();
       } catch (YarnException e) {
         e.printStackTrace();
+        LOG.error("FAILED TO SHUTDOWN PYTHON STREAMING APPLICATION ");
+        LOG.error("Encountered Exception " + e.getMessage());
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("FAILED TO SHUTDOWN PYTHON STREAMING APPLICATION ");
+        LOG.error("Encountered Exception " + e.getMessage());
       }
 
     }
