@@ -1,7 +1,4 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by Fernflower decompiler)
-//
+
 
 package org.apache.apex.malhar.python.operator;
 
@@ -41,6 +38,75 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   protected byte[] serializedFunction = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
   protected transient OpType operationType = null;
+
+  public static class PythonWorkerContext
+  {
+    private static String PY4J_SRC_ZIP_FILE_NAME = "py4j-0.10.4-src.zip";
+    private static String PYTHON_WORKER_FILE_NAME = "worker.py";
+    private String dependencyPath = null;
+    private String workerFilePath = null;
+
+    private String pythonEnvPath = null;
+    private OpType opType = null;
+
+    public PythonWorkerContext(OpType operationType)
+    {
+      this.setup();
+      this.opType = operationType;
+    }
+
+    private void setup()
+    {
+      String PYTHONPATH = System.getenv("PYTHONPATH");
+      LOG.info("PYTHON PATH" + PYTHONPATH);
+      File py4jDependencyFile = new File("./" + PY4J_SRC_ZIP_FILE_NAME);
+      if (pythonEnvPath != null) {
+        pythonEnvPath = py4jDependencyFile.getAbsolutePath() + ":" + pythonEnvPath;
+      } else {
+        pythonEnvPath = py4jDependencyFile.getAbsolutePath();
+      }
+      LOG.info("FINAL PYTHON PATH" + pythonEnvPath);
+      dependencyPath = py4jDependencyFile.getAbsolutePath();
+      if (py4jDependencyFile.exists()) {
+        LOG.info(" " + dependencyPath + " Exists ");
+
+      }
+      File pythonWorkerFile = new File("./" + PYTHON_WORKER_FILE_NAME);
+      workerFilePath = pythonWorkerFile.getAbsolutePath();
+      PythonGenericOperator.LOG.info("Python dependency Path " + dependencyPath + " worker Path " + workerFilePath);
+    }
+
+    public String getDependencyPath()
+    {
+      return dependencyPath;
+    }
+
+    public void setDependencyPath(String dependencyPath)
+    {
+      this.dependencyPath = dependencyPath;
+    }
+
+    public String getWorkerFilePath()
+    {
+      return workerFilePath;
+    }
+
+    public void setWorkerFilePath(String workerFilePath)
+    {
+      this.workerFilePath = workerFilePath;
+    }
+
+    public String getPythonEnvPath()
+    {
+      return pythonEnvPath;
+    }
+
+    public void setPythonEnvPath(String pythonEnvPath)
+    {
+      this.pythonEnvPath = pythonEnvPath;
+    }
+
+  }
 
   public enum OpType
   {
@@ -97,22 +163,20 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     }
 
     LOG.trace("APPLICATION PATH FROM PYTHON OPERATOR" + (String)context.getValue(DAGContext.APPLICATION_PATH));
-    ArrayList applicationDependencies = new ArrayList();
+    ArrayList<String> applicationDependencies = new ArrayList<>();
     applicationDependencies.add((String)context.getValue(DAGContext.APPLICATION_PATH) + "/py4j-0.10.4-src.zip");
     applicationDependencies.add((String)context.getValue(DAGContext.APPLICATION_PATH) + "/worker.py");
     String var11 = System.getProperty("java.class.path");
-//    String[] classpathEntries = var11.split(File.pathSeparator);
 
-    this.pythonWorkerProxy = new PythonWorkerProxy(this.serializedFunction);
+    this.pythonWorkerProxy = new PythonWorkerProxy<>(this.serializedFunction);
     int port = NetworkUtils.findAvaliablePort();
     this.server = new GatewayServer(this.pythonWorkerProxy, port);
 
-    this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.operationType);
+    this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, new PythonWorkerContext(this.operationType));
     this.server.addListener(this.py4jListener);
     this.server.start(true);
 
     int pythonServerStartAttempts = 5;
-    String currentUserName = System.getProperty("user.name");
     while (!this.py4jListener.isPythonServerStarted() && !this.pythonWorkerProxy.isFunctionEnabled() && pythonServerStartAttempts > 0) {
       try {
         Thread.sleep(5000L);
@@ -146,22 +210,23 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 
   public static class PythonGatewayServerListenser implements GatewayServerListener
   {
-    private String py4jSrcZip = "py4j-0.10.4-src.zip";
+
     private GatewayServer server = null;
     private Process pyProcess = null;
     private boolean pythonServerStarted = false;
     private OpType operationType = OpType.MAP;
     private static final Logger LOG = LoggerFactory.getLogger(PythonGatewayServerListenser.class);
+    private PythonWorkerContext context = null;
 
     public boolean isPythonServerStarted()
     {
       return this.pythonServerStarted;
     }
 
-    public PythonGatewayServerListenser(GatewayServer startedServer, OpType operationType)
+    public PythonGatewayServerListenser(GatewayServer startedServer, PythonWorkerContext context)
     {
       this.server = startedServer;
-      this.operationType = operationType;
+      this.context = context;
     }
 
     public void connectionError(Exception e)
@@ -221,32 +286,13 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     private void startPythonWorker(int gatewayServerPort)
     {
       ProcessBuilder pb = new ProcessBuilder(new String[0]);
-      String PYTHONPATH = System.getenv("PYTHONPATH");
-      LOG.info("PYTHON PATH" + PYTHONPATH);
 
       try {
         PythonGenericOperator.LOG.info("STARTING python worker process");
-
-        Map e = pb.environment();
-        File py4jDependencyFile = new File("./" + py4jSrcZip);
-        if (PYTHONPATH != null) {
-          PYTHONPATH = py4jDependencyFile.getAbsolutePath() + ":" + PYTHONPATH;
-        } else {
-          PYTHONPATH = py4jDependencyFile.getAbsolutePath();
-        }
-        LOG.info("FINAL PYTHON PATH" + PYTHONPATH);
-        String py4jDependencyePath = py4jDependencyFile.getAbsolutePath();
-        if (py4jDependencyFile.exists()) {
-          LOG.info(" " + py4jDependencyePath + " Exists ");
-
-        }
-        File pythonWorkerFile = new File("./worker.py");
-        String py4jWorkerPath = pythonWorkerFile.getAbsolutePath();
-        PythonGenericOperator.LOG.info("Python dependency Path " + py4jDependencyePath + " worker Path " + py4jWorkerPath);
-        e.put("PYTHONPATH", PYTHONPATH);
-        this.pyProcess = pb.command(new String[]{"/usr/bin/python", "-u", py4jWorkerPath, "" + gatewayServerPort, operationType.getType()}).start();
+        Map<String, String> processEnvironment = pb.environment();
+        processEnvironment.put("PYTHONPATH", this.context.getPythonEnvPath());
+        this.pyProcess = pb.command(new String[]{"/usr/bin/python", "-u", this.context.getWorkerFilePath(), "" + gatewayServerPort, operationType.getType()}).start();
         LoggerUtils.captureProcessStreams(this.pyProcess);
-
         this.pythonServerStarted = true;
         PythonGenericOperator.LOG.info("Python worker started " + this.pyProcess);
       } catch (IOException var8) {
