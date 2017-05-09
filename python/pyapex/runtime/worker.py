@@ -38,10 +38,8 @@ class WorkerImpl(object):
     def setFunction(self, f, opType):
         try:
             import os, imp
-
             import cloudpickle
             # serialized_f = f.decode('ascii')
-
             self.callable_f = cloudpickle.loads(f)
             self.opType = opType
         except ValueError as e:

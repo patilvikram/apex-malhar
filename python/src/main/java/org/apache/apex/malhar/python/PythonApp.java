@@ -50,6 +50,8 @@ public class PythonApp implements StreamingApplication
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
   private String py4jSrcZip = "py4j-0.10.4-src.zip";
 
+  private Configuration conf;
+
   private PythonAppManager manager = null;
 
   public String getName()
@@ -70,8 +72,6 @@ public class PythonApp implements StreamingApplication
     this.appId = appId;
     this.name = name;
   }
-
-  private Configuration conf;
 
   public PythonApp()
   {
@@ -225,6 +225,20 @@ public class PythonApp implements StreamingApplication
   public PythonApp setFlatMap(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.flatmap_func(searializedFunction, Option.Options.name(name));
+    return this;
+  }
+//
+//  public PythonApp setFlatMap2(String name, Function.FilterFunction test_function)
+//  {
+//    FunctionOperator.FilterFunctionOperator<String> operator = new FunctionOperator.FilterFunctionOperator<String>(test_function);
+//    apexStream = apexStream.addOperator(operator, operator.input, operator.output);
+//    return this;
+//  }
+
+
+  public PythonApp setFlatMap2(String name )
+  {
+//    apexStream = apexStream.addOperator(operator, operator.input, operator.output);
     return this;
   }
 

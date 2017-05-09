@@ -24,6 +24,22 @@ from tempfile import TemporaryFile, NamedTemporaryFile
 from uuid import uuid1
 from py4j.protocol import Py4JJavaError
 
+class TestFlatmap(object):
+    def f(input):
+        return [input, input]
+
+    class Java:
+        implements = ["org.apache.apex.malhar.lib.function.Function.FilterFunction"]
+
+class PythonWorkerTest(object):
+
+    def setFunction(self, f, opType):
+        return "FUNCTION SET"
+
+    def execute(self, tupleIn):
+        return "DUMMY"
+    class Java:
+        implements = ["org.apache.apex.malhar.python.operator.runtime.PythonWorker"]
 
 class ShellConnector(object):
     gateway = None
@@ -142,6 +158,12 @@ class ApexStreamingApp():
         serialized_func  = self.get_serialized_file_name(name, func)
         self.java_streaming_app = self.java_streaming_app.setFlatMap(name, serialized_func)
         return self
+
+    def setFlatMap2(self, name ):
+      from pyapex import TestFlatmap
+#     self.java_streaming_app = self.java_streaming_app.setFlatMap2(name, PythonWorkerTest())
+      self.java_streaming_app = self.java_streaming_app.setFlatMap2(name)
+      return self
 
     def setFilter(self, name, func):
         if not isinstance(func, types.FunctionType):

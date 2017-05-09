@@ -19,3 +19,4 @@
 
 from .apexapp import createApp
 from .apexapp import getApp
+from .apexapp import TestFlatmap 
