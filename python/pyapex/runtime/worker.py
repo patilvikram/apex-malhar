@@ -98,6 +98,7 @@ def main(argv):
     os.environ['PYTHONPATH'] = PYTHON_PATH + ':' + site.getusersitepackages().replace('/home/.local/',
                                                                                       '/home/' + getpass.getuser() + '/.local/') + '/'
     sys.path.extend(os.environ['PYTHONPATH'].split(':'))
+    print "PYTHONPATH " + str(os.environ['PYTHONPATH'])
     import pickle
     gp = GatewayParameters(address='127.0.0.1', port=int(argv[0]), auto_convert=True)
     cb = CallbackServerParameters(daemonize=False, eager_load=True,port= 0)
