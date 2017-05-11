@@ -1,5 +1,3 @@
-
-
 package org.apache.apex.malhar.python.operator;
 
 import java.io.File;
@@ -166,8 +164,6 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     ArrayList<String> applicationDependencies = new ArrayList<>();
     applicationDependencies.add((String)context.getValue(DAGContext.APPLICATION_PATH) + "/py4j-0.10.4-src.zip");
     applicationDependencies.add((String)context.getValue(DAGContext.APPLICATION_PATH) + "/worker.py");
-    String var11 = System.getProperty("java.class.path");
-
     this.pythonWorkerProxy = new PythonWorkerProxy<>(this.serializedFunction);
     int port = NetworkUtils.findAvaliablePort();
     this.server = new GatewayServer(this.pythonWorkerProxy, port);

@@ -28,10 +28,11 @@
 # kill app-id
 # shutdown app-id
 
-usage() { echo "Usage: $0 [-sh] [-l <python program file>] [-k <app-id>] [-t <app-id>]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-sh] [-l <python program file> ] [-m HADOOP|LOCAL ] [-k <app-id>] [-t <app-id>]" 1>&2; exit 1; }
 COMMAND_MODE='SHELL_MODE' 
+RUNNING_MODE='HADOOP'
 EXECUTABLE_FILE=false
-while getopts ":s:l:k:t" o; do
+while getopts ":s:l:k:t:m:" o; do
     case "${o}" in
         s)
             s=${OPTARG}
@@ -44,6 +45,9 @@ while getopts ":s:l:k:t" o; do
         k)  
             APP_NAME=${OPTARG}
             COMMAND_MODE="KILL_MODE"
+            ;;
+        m)  
+            RUNNING_MODE=${OPTARG}
             ;;
         t) 
             usage
@@ -141,11 +145,13 @@ cp $BUILD_DIR/lib/* $PYAPEX_HOME/jars
 echo "Intiating PYSHELL now " 
 
 ln -sf $PYAPEX_HOME "$script_dir/pyapex"
-if [ ! -x "$DT_HADOOP" ]; then
+echo "$RUNNING_MODE"
+if [[ ( -z "$DT_HADOOP" ) || ( "$RUNNING_MODE" == "LOCAL" ) ]]; then
   echo "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echo "Starting Apex Runner without hadoop"
   export CLASSPATH=$DT_CLASSPATH
+  echo $DT_CLASSPATH
   "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1 &
   APEXRUNNERPID="$!"  
 else

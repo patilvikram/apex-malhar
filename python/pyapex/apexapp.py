@@ -114,9 +114,7 @@ class ApexStreamingApp():
     def toFolder(self, name,file_name, directory_name, **kwargs):
         properties = {}
         if file_name is None or directory_name is None:
-            raise Exception("Invalid Directory Name")
-
-
+            raise Exception("Directory Name or File name should be specified")
         self.java_streaming_app = self.java_streaming_app.toFolder( name, file_name, directory_name )
         return self
 
