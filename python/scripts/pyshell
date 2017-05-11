@@ -72,10 +72,10 @@ real_dir() {
     [[ $SOURCE != /* ]] && SOURCE="$SOURCE_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
   done
   SOURCE_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  echo "$SOURCE_DIR"
+  echo $SOURCE_DIR
 }
 script_dir=$(real_dir "${BASH_SOURCE[0]}")
-
+echo "Script Dir",$script_dir
 # Create missing clirc file for current user
 if [ ! -f "${HOME}/.dt/clirc" ]; then
   mkdir -p "${HOME}/.dt"
@@ -103,7 +103,6 @@ export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 
 BUILD_DIR="$( dirname "$0" )/../target"
 PYAPEX_HOME="`pwd`/../pyapex"
-echo "PYAPEX HOME :$PYAPEX_HOME"
 if [ -z "$DT_HADOOP" ]; then
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
 else
@@ -117,7 +116,7 @@ if [ -f "$MVN_GENERATED_PATH" ]; then
     exit 1;
   fi
   DT_CLASSPATH="$DT_CLASSPATH:$DT_CORE_JAR"
-  DT_CLASSPATH=$DT_CLASSPATH:`cat $MVN_GENERATED_PATH`
+  DT_CLASSPATH="$DT_CLASSPATH:`cat $MVN_GENERATED_PATH`"
 else
   # running from installation
   if [ -z "$DT_HADOOP" ]; then
@@ -125,7 +124,8 @@ else
     exit 1;
   fi
   BASEDIR=$( cd ${script_dir}/..; pwd -P )
-  DT_CLASSPATH=$BASEDIR/lib'/*'":${DT_CLASSPATH}"
+  DT_CLASSPATH=$BASEDIR/libs'/*'":${DT_CLASSPATH}"
+  DT_CLASSPATH="$DT_CLASSPATH"
 fi
 
 if [ -n "$DT_CLASSPATH" ]; then
@@ -138,10 +138,8 @@ fi
 APEXRUNERPID=0
 APEXRUNNERLOG="$( dirname "$0")/ApexRunner.out"
 rm -f $APEXRUNNERLOG
-#echo $DT_CLASSPATH
-#echo $HADOOP_CLASSPATH
 export PYAPEX_HOME=$PYAPEX_HOME
-cp $BUILD_DIR/lib/* $PYAPEX_HOME/jars
+cp $BUILD_DIR/runtime_libs/* $PYAPEX_HOME/jars
 echo "Intiating PYSHELL now " 
 
 ln -sf $PYAPEX_HOME "$script_dir/pyapex"
@@ -151,12 +149,12 @@ if [[ ( -z "$DT_HADOOP" ) || ( "$RUNNING_MODE" == "LOCAL" ) ]]; then
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echo "Starting Apex Runner without hadoop"
   export CLASSPATH=$DT_CLASSPATH
-  echo $DT_CLASSPATH
   "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1 &
   APEXRUNNERPID="$!"  
 else
   export HADOOP_USER_CLASSPATH_FIRST=1
   # remove hadoop and duplicate slf4j binding (bash replace is too slow)
+  #export HADOOP_CLASSPATH="$HADOOP_CLASSPATH:$BUILD_DIR/libs"
   export HADOOP_CLASSPATH=$(echo -n "$HADOOP_CLASSPATH" | tr ":" "\n" | sed "/slf4j-log4j/d" | sed "/org\/apache\/hadoop/d" | tr "\n" ":")
   echo "Starting Apex Runner with hadoop" 
   "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1  &
@@ -169,7 +167,6 @@ then
    PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
 elif [ "$COMMAND_MODE" = "LAUNCH_MODE" ]
 then
-   echo $EXECUTABLE_FILE
    PYTHONPATH=$PYTHONPATH:"python" python "$EXECUTABLE_FILE" 
    
 elif [ "$COMMAND_MODE" = "KILL_MODE" ]
