@@ -137,11 +137,12 @@
       <groupId>org.apache.apex</groupId>
       <artifactId>apex-engine</artifactId>
       <version>${apex.core.version}</version>
+      <!--<scope>provided</scope>-->
     </dependency>
     <dependency>
       <groupId>org.apache.apex</groupId>
       <artifactId>apex-api</artifactId>
-      <version>3.6.0-SNAPSHOT</version>
+      <version>${apex.core.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.apex</groupId>
