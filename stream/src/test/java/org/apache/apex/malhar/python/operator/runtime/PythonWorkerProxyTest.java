@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import py4j.Py4JException;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -66,13 +65,13 @@ public class PythonWorkerProxyTest
 
     PythonWorkerProxy workerProxy = new PythonWorkerProxy(functionData.getBytes());
     workerProxy.register(failingMockWorker);
-    verify(logger).debug("Registering python worker now");
-    verify(logger).debug("Python worker registered");
+//    verify(logger).debug("Registering python worker now");
+//    verify(logger).debug("Python worker registered");
     String tupleValue = "TUPLE";
     Assert.assertEquals(null, workerProxy.execute(tupleValue));
 
-    verify(logger).trace("Processing tuple:" + tupleValue);
-    verify(logger).error("Exception encountered while executing operation for tuple:" + tupleValue + " Message:" + exceptionString);
+//    verify(logger).trace("Processing tuple:" + tupleValue);
+//    verify(logger).error("Exception encountered while executing operation for tuple:" + tupleValue + " Message:" + exceptionString);
 
   }
 }

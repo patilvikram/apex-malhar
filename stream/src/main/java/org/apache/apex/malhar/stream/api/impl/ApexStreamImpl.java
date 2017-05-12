@@ -424,7 +424,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   }
 
   @Override
-  public void runEmbedded(boolean async, long duration, Callable<Boolean> exitCondition)
+  public LocalMode.Controller runEmbedded(boolean async, long duration, Callable<Boolean> exitCondition)
   {
     LocalMode lma = LocalMode.newInstance();
     populateDag(lma.getDAG());
@@ -442,6 +442,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
         lc.run();
       }
     }
+    return lc;
 
   }
 

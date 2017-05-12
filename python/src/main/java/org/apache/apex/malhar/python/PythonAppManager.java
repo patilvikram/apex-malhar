@@ -30,14 +30,14 @@ public class PythonAppManager
     this.mode = mode;
   }
 
-  public String launch()
+  public String launch() throws Exception
   {
 
     LOG.error("Launching app in python app");
 
     try {
       if (mode == LaunchMode.LOCAL) {
-        app.runLocal();
+        appIdentifier = app.runLocal();
         return "LocalMode";
       } else {
         StramAppLauncher appLauncher = null;
@@ -53,10 +53,11 @@ public class PythonAppManager
     } catch (Exception e) {
       e.printStackTrace();
 
-      LOG.error("FAILED TO LAUNCH PYTHON STREAMING APPLICATION ");
+      LOG.error("Failed TO Launch PYTHON Streaming Application");
       LOG.error("Encountered Exception " + e.getMessage());
+      throw e;
     }
-    return null;
+
   }
 
   public void shutdown()

@@ -22,6 +22,7 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import com.datatorrent.api.DAG;
+import com.datatorrent.api.LocalMode;
+import com.datatorrent.api.Operator;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
 import com.datatorrent.stram.client.StramAppLauncher;
@@ -52,8 +55,8 @@ public class PythonApp implements StreamingApplication
   private ApplicationId appId = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
   private String py4jSrcZip = "py4j-0.10.4-src.zip";
-
   private PythonAppManager manager = null;
+  private Map<String, Operator> operatorMap = new HashMap<String, Operator>();
 
   public String getName()
   {
@@ -179,9 +182,9 @@ public class PythonApp implements StreamingApplication
     return manager.launch();
   }
 
-  public void runLocal()
+  public LocalMode.Controller runLocal()
   {
-    this.apexStream.runEmbedded(true, 0, null);
+    return this.apexStream.runEmbedded(true, 0, null);
   }
 
   public ApexStream getApexStream()

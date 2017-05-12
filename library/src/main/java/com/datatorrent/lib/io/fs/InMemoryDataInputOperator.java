@@ -6,9 +6,6 @@ import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.InputOperator;
 
-/**
- * Created by vikram on 19/4/17.
- */
 public class InMemoryDataInputOperator<T> implements InputOperator
 {
 

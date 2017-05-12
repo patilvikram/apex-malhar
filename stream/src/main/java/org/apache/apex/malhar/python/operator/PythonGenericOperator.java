@@ -2,9 +2,7 @@ package org.apache.apex.malhar.python.operator;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -36,6 +34,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   protected byte[] serializedFunction = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
   protected transient OpType operationType = null;
+  private PythonWorkerContext context = null;
 
   public static class PythonWorkerContext
   {
@@ -43,20 +42,23 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     private static String PYTHON_WORKER_FILE_NAME = "worker.py";
     private String dependencyPath = null;
     private String workerFilePath = null;
-
     private String pythonEnvPath = null;
+
+    private byte[] serializedFunction = null;
     private OpType opType = null;
 
-    public PythonWorkerContext(OpType operationType)
+    public PythonWorkerContext(OpType operationType, byte[] serializedFunction)
     {
       this.setup();
       this.opType = operationType;
+      this.serializedFunction = serializedFunction;
     }
 
     private void setup()
     {
       String PYTHONPATH = System.getenv("PYTHONPATH");
       LOG.info("PYTHON PATH" + PYTHONPATH);
+
       File py4jDependencyFile = new File("./" + PY4J_SRC_ZIP_FILE_NAME);
       if (pythonEnvPath != null) {
         pythonEnvPath = py4jDependencyFile.getAbsolutePath() + ":" + pythonEnvPath;
@@ -102,6 +104,11 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     public void setPythonEnvPath(String pythonEnvPath)
     {
       this.pythonEnvPath = pythonEnvPath;
+    }
+
+    public byte[] getSerializedFunction()
+    {
+      return serializedFunction;
     }
 
   }
@@ -150,6 +157,11 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     this.serializedFunction = serializedFunc;
   }
 
+  public PythonGenericOperator(PythonWorkerContext context)
+  {
+    this.context = context;
+  }
+
   public void setup(OperatorContext context)
   {
     AttributeMap attMap = context.getAttributes();
@@ -161,14 +173,10 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     }
 
     LOG.trace("APPLICATION PATH FROM PYTHON OPERATOR" + (String)context.getValue(DAGContext.APPLICATION_PATH));
-    ArrayList<String> applicationDependencies = new ArrayList<>();
-    applicationDependencies.add((String)context.getValue(DAGContext.APPLICATION_PATH) + "/py4j-0.10.4-src.zip");
-    applicationDependencies.add((String)context.getValue(DAGContext.APPLICATION_PATH) + "/worker.py");
     this.pythonWorkerProxy = new PythonWorkerProxy<>(this.serializedFunction);
     int port = NetworkUtils.findAvaliablePort();
     this.server = new GatewayServer(this.pythonWorkerProxy, port);
-
-    this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, new PythonWorkerContext(this.operationType));
+    this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.context);
     this.server.addListener(this.py4jListener);
     this.server.start(true);
 
@@ -197,11 +205,6 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     if (server != null) {
       server.shutdown();
     }
-  }
-
-  private void copyFilesToLocalResource(List<String> hdfsFilePaths)
-  {
-    LOG.debug("Moving files locally ");
   }
 
   public static class PythonGatewayServerListenser implements GatewayServerListener

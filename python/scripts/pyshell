@@ -104,8 +104,10 @@ export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 BUILD_DIR="$( dirname "$0" )/../target"
 PYAPEX_HOME="`pwd`/../pyapex"
 if [ -z "$DT_HADOOP" ]; then
+  echo "Development Mode without Hadoop Installation: Using jars from mvn generated path"
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
 else
+  echo "Development Mode with Hadoop Installation:  Using jars to be provided externally "
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath-no-hadoop"
 fi
 if [ -f "$MVN_GENERATED_PATH" ]; then
