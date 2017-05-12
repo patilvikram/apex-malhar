@@ -29,8 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
+
+import org.apache.apex.malhar.lib.window.WindowOption;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
+import org.apache.apex.malhar.stream.api.impl.ApexWindowedStreamImpl;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -231,6 +234,21 @@ public class PythonApp implements StreamingApplication
   public PythonApp setFilter(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.filter_func(searializedFunction, Option.Options.name(name));
+    return this;
+  }
+
+  public PythonApp window()
+  {
+    apexStream = apexStream.window(new WindowOption.GlobalWindow());
+    return this;
+  }
+
+  public PythonApp count(String name)
+  {
+    if (apexStream instanceof ApexWindowedStreamImpl) {
+      apexStream = ((ApexWindowedStreamImpl)apexStream).count(Option.Options.name(name));
+      return this;
+    }
     return this;
   }
 
