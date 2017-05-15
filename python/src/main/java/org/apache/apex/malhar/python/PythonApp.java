@@ -22,7 +22,6 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
-
 import org.apache.apex.malhar.lib.window.WindowOption;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
@@ -56,7 +54,7 @@ public class PythonApp implements StreamingApplication
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
   private String py4jSrcZip = "py4j-0.10.4-src.zip";
   private PythonAppManager manager = null;
-  private Map<String, Operator> operatorMap = new HashMap<String, Operator>();
+  List<Operator> operatorList = new ArrayList<>();
 
   public String getName()
   {
@@ -178,6 +176,7 @@ public class PythonApp implements StreamingApplication
     this.setRequiredJARFiles();
     this.setRequiredRuntimeFiles();
     this.manager = new PythonAppManager(this, mode);
+    DAG dag = this.apexStream.createDag();
 
     return manager.launch();
   }
@@ -225,6 +224,7 @@ public class PythonApp implements StreamingApplication
   public PythonApp setMap(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.map_func(searializedFunction, Option.Options.name(name));
+
     return this;
   }
 
@@ -243,6 +243,7 @@ public class PythonApp implements StreamingApplication
   public PythonApp window()
   {
     apexStream = apexStream.window(new WindowOption.GlobalWindow());
+
     return this;
   }
 
@@ -287,6 +288,8 @@ public class PythonApp implements StreamingApplication
     apexStream = apexStream.endWith(outputOperator, outputOperator.input, Option.Options.name(name));
     return this;
   }
+
+
 
   public PythonApp setConfig(String key, String value)
   {

@@ -2,6 +2,7 @@ package org.apache.apex.malhar.python.operator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +28,7 @@ import py4j.GatewayServerListener;
 
 public abstract class PythonGenericOperator<T> extends BaseOperator
 {
+
   protected transient GatewayServer server = null;
   protected transient PythonGatewayServerListenser py4jListener = null;
   protected transient PythonWorkerProxy<T> pythonWorkerProxy = null;
@@ -35,6 +37,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
   protected transient OpType operationType = null;
   private PythonWorkerContext context = null;
+  private Map<String, String> pythonOperatorEnv = new HashMap<String, String>();
 
   public static class PythonWorkerContext
   {
