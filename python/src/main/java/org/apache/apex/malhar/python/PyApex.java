@@ -15,7 +15,6 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 
 package org.apache.apex.malhar.python;
@@ -25,6 +24,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 
@@ -54,7 +54,7 @@ public class PyApex
         YarnClient client = YarnClient.createYarnClient();
         List<ApplicationReport> apps = client.getApplications();
         for (ApplicationReport appReport : apps) {
-          if (appReport.getName().equals(name) ) {
+          if (appReport.getName().equals(name)) {
             LOG.debug("Application Name: {} Application ID: {} Application State: {}", appReport.getName(), appReport.getApplicationId().toString(), appReport.getYarnApplicationState());
             return new PythonApp(name, appReport.getApplicationId());
           }
@@ -70,10 +70,12 @@ public class PyApex
 
   public static void main(String[] args)
   {
+    LOG.error("PyApex started with:" + StringUtils.join( args));
     PyApex pythonEntryPoint = new PyApex();
     GatewayServer gatewayServer = new GatewayServer(pythonEntryPoint);
     gatewayServer.start();
     LOG.debug("Gateway Server Started");
+
   }
 
 }

@@ -21,6 +21,7 @@ package org.apache.apex.malhar.stream.api.impl;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -80,7 +81,7 @@ public class ApexStreamImplTest
       // Assert the stream is from first operator to second operator
       Assert.assertEquals("first", stream.getSource().getOperatorMeta().getName());
       Assert.assertTrue(1 == stream.getSinks().size());
-      Assert.assertEquals("second", stream.getSinks().get(0).getOperatorWrapper().getName());
+      Assert.assertEquals("second", ((List<LogicalPlan.InputPortMeta>)(stream.getSinks())).get(0).getOperatorMeta().getName());
 
       // Assert the stream is thread local
       Assert.assertTrue(stream.getLocality() == DAG.Locality.THREAD_LOCAL);
