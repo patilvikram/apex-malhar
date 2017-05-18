@@ -104,8 +104,10 @@ export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 BUILD_DIR="$( dirname "$0" )/../target"
 PYAPEX_HOME="`pwd`/../pyapex"
 if [ -z "$DT_HADOOP" ]; then
+  echo "Development Mode without Hadoop Installation: Using jars from mvn generated path"
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
 else
+  echo "Development Mode with Hadoop Installation:  Using jars to be provided externally "
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath-no-hadoop"
 fi
 if [ -f "$MVN_GENERATED_PATH" ]; then
@@ -156,8 +158,8 @@ else
   # remove hadoop and duplicate slf4j binding (bash replace is too slow)
   #export HADOOP_CLASSPATH="$HADOOP_CLASSPATH:$BUILD_DIR/libs"
   export HADOOP_CLASSPATH=$(echo -n "$HADOOP_CLASSPATH" | tr ":" "\n" | sed "/slf4j-log4j/d" | sed "/org\/apache\/hadoop/d" | tr "\n" ":")
-  echo "Starting Apex Runner with hadoop" 
-  "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1  &
+  echo "Starting Apex Runner with hadoop $@" 
+  "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" "-l log.properties"  >$APEXRUNNERLOG 2>&1  &
   APEXRUNNERPID="$!"
 fi
 sleep 5

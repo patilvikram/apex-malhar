@@ -22,6 +22,8 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,14 +31,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
+import org.apache.apex.malhar.lib.window.WindowOption;
+import org.apache.apex.malhar.python.operator.PythonGenericOperator;
+import org.apache.apex.malhar.python.operator.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
+import org.apache.apex.malhar.stream.api.impl.ApexWindowedStreamImpl;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import com.datatorrent.api.DAG;
+import com.datatorrent.api.LocalMode;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
 import com.datatorrent.stram.client.StramAppLauncher;
@@ -49,34 +56,41 @@ public class PythonApp implements StreamingApplication
   private ApplicationId appId = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
   private String py4jSrcZip = "py4j-0.10.4-src.zip";
-
   private PythonAppManager manager = null;
-
-  public String getName()
-  {
-    return name;
-  }
-
   private String name;
+  private Configuration conf;
+
+  private String apexDirectoryPath = null;
+
+  public PythonApp()
+  {
+    this(null, null);
+
+  }
 
   public PythonApp(String name)
   {
-    this.name = name;
-    this.conf = new Configuration(true);
+
+    this(name, null);
   }
 
   public PythonApp(String name, ApplicationId appId)
   {
     this.appId = appId;
     this.name = name;
+    this.conf = new Configuration(true);
+    this.apexDirectoryPath = System.getenv("PYAPEX_HOME");
+    this.conf.set("dt.loggers.level", "com.datatorrent.*:INFO,org.apache.*:DEBUG");
   }
 
-  private Configuration conf;
-
-  public PythonApp()
+  public String getApexDirectoryPath()
   {
-    this.conf = new Configuration(true);
-    this.conf.set("dt.loggers.level", "com.datatorrent.*:INFO,org.apache.*:DEBUG,httpclient.wire.*:INFO;org.apache.apex.malhar.python.*:DEBUG");
+    return apexDirectoryPath;
+  }
+
+  public String getName()
+  {
+    return name;
   }
 
   public void populateDAG(DAG dag, Configuration conf)
@@ -89,9 +103,9 @@ public class PythonApp implements StreamingApplication
 
   public void setRequiredJARFiles()
   {
-    String APEX_DIRECTORY_PATH = System.getenv("PYAPEX_HOME");
-    LOG.debug("PYAPEX_HOME:" + APEX_DIRECTORY_PATH);
-    File dir = new File(APEX_DIRECTORY_PATH + "/jars/");
+
+    LOG.debug("PYAPEX_HOME:" + getApexDirectoryPath());
+    File dir = new File(this.getApexDirectoryPath() + "/jars/");
     File[] files = dir.listFiles();
     ArrayList<String> jarFiles = new ArrayList<String>();
     for (File jarFile : files) {
@@ -99,8 +113,8 @@ public class PythonApp implements StreamingApplication
       jarFiles.add(jarFile.getAbsolutePath());
 
     }
-    jarFiles.add(APEX_DIRECTORY_PATH + "/runtime/" + py4jSrcZip);
-    jarFiles.add(APEX_DIRECTORY_PATH + "/runtime/worker.py");
+    jarFiles.add(this.getApexDirectoryPath() + "/runtime/" + py4jSrcZip);
+    jarFiles.add(this.getApexDirectoryPath() + "/runtime/worker.py");
     extendExistingConfig(StramAppLauncher.LIBJARS_CONF_KEY_NAME, jarFiles);
 //    this.getClassPaths();
   }
@@ -167,18 +181,34 @@ public class PythonApp implements StreamingApplication
     PythonAppManager.LaunchMode mode = PythonAppManager.LaunchMode.HADOOP;
     if (local) {
       mode = PythonAppManager.LaunchMode.LOCAL;
-    }
 
+    }
+    LOG.debug("Launching mode:" + mode);
     this.setRequiredJARFiles();
     this.setRequiredRuntimeFiles();
     this.manager = new PythonAppManager(this, mode);
+    DAG dag = this.apexStream.createDag();
 
+    Map<String, String> pythonOperatorEnv = new HashMap<>();
+    if (local) {
+      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_WORKER_PATH, this.getApexDirectoryPath() + "/runtime/worker.py");
+      pythonOperatorEnv.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, this.getApexDirectoryPath() + "/runtime/" + py4jSrcZip);
+    }
+
+    Collection<DAG.OperatorMeta> operators = dag.getAllOperatorsMeta();
+    for (DAG.OperatorMeta operatorMeta : operators) {
+      if (operatorMeta.getOperator() instanceof PythonGenericOperator) {
+        LOG.debug("Updating python operator: " + operatorMeta.getName());
+        PythonGenericOperator operator = ((PythonGenericOperator)operatorMeta.getOperator());
+        operator.setPythonOperatorEnv(pythonOperatorEnv);
+      }
+    }
     return manager.launch();
   }
 
-  public void runLocal()
+  public LocalMode.Controller runLocal()
   {
-    this.apexStream.runEmbedded(true, 0, null);
+    return this.apexStream.runEmbedded(true, 0, null);
   }
 
   public ApexStream getApexStream()
@@ -219,6 +249,7 @@ public class PythonApp implements StreamingApplication
   public PythonApp setMap(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.map_func(searializedFunction, Option.Options.name(name));
+
     return this;
   }
 
@@ -231,6 +262,22 @@ public class PythonApp implements StreamingApplication
   public PythonApp setFilter(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.filter_func(searializedFunction, Option.Options.name(name));
+    return this;
+  }
+
+  public PythonApp window()
+  {
+    apexStream = apexStream.window(new WindowOption.GlobalWindow());
+
+    return this;
+  }
+
+  public PythonApp count(String name)
+  {
+    if (apexStream instanceof ApexWindowedStreamImpl) {
+      apexStream = ((ApexWindowedStreamImpl)apexStream).count(Option.Options.name(name));
+      return this;
+    }
     return this;
   }
 

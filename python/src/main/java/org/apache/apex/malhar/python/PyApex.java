@@ -15,7 +15,6 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 
 package org.apache.apex.malhar.python;
@@ -25,8 +24,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.log4j.PropertyConfigurator;
 
 import py4j.GatewayServer;
 import py4j.Py4JException;
@@ -54,7 +55,7 @@ public class PyApex
         YarnClient client = YarnClient.createYarnClient();
         List<ApplicationReport> apps = client.getApplications();
         for (ApplicationReport appReport : apps) {
-          if (appReport.getName().equals(name) ) {
+          if (appReport.getName().equals(name)) {
             LOG.debug("Application Name: {} Application ID: {} Application State: {}", appReport.getName(), appReport.getApplicationId().toString(), appReport.getYarnApplicationState());
             return new PythonApp(name, appReport.getApplicationId());
           }
@@ -70,10 +71,42 @@ public class PyApex
 
   public static void main(String[] args)
   {
+
+    LOG.info("Starting PYAPEX with " + StringUtils.join(args,' '));
+    PropertyConfigurator.configure("./log.properties");
     PyApex pythonEntryPoint = new PyApex();
     GatewayServer gatewayServer = new GatewayServer(pythonEntryPoint);
     gatewayServer.start();
     LOG.debug("Gateway Server Started");
+
   }
+
+
+  // Additional code to handle Arguments.
+//  public static CommandLine parseArguments(String[] args)
+//  {
+//    BasicParser parser = new BasicParser();
+//    CommandLine cmd = null;
+//    HelpFormatter formatter = new HelpFormatter();
+//    Options options = getOptions();
+//    try {
+//      cmd = parser.parse(options, args);
+//    } catch (ParseException e) {
+//      formatter.printHelp("Apex-Java", options);
+//      System.exit(1);
+//      return null;
+//    }
+//    return cmd;
+//
+//  }
+//
+//  public static Options getOptions()
+//  {
+//    Options options = new Options();
+//    Option input = new Option("l", "logfile", true, "Log file path");
+//    input.setRequired(true);
+//    options.addOption(input);
+//    return options;
+//  }
 
 }

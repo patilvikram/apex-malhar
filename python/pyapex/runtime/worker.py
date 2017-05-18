@@ -20,7 +20,7 @@
 import sys
 import site
 import pip
-from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters
+from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters,java_import
 import logging
 
 gateway = None
@@ -114,6 +114,12 @@ def main(argv):
         python_port)
 
     gateway.entry_point.register(WorkerImpl(gateway, argv[1]))
+
+    # java_import(gateway.jvm, "org.apache.apex.malhar.lib.window.WindowOption.*")
+    # java_import(gateway.jvm,"org.joda.time.*")
+    # _jduration=gateway.jvm.Duration(100000)
+    # _jtimeWindows = gateway.jvm.TimeWindows(_jduration)
+    # print _jtimeWindows.getDuration().getMillis()
     print getpass.getuser()
 
 

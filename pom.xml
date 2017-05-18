@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.apex</groupId>
     <artifactId>apex</artifactId>
-    <version>3.4.0</version>
+    <version>3.6.0</version>
   </parent>
 
   <groupId>org.apache.apex</groupId>
@@ -49,7 +49,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.deploy.skip>false</maven.deploy.skip>
-    <apex.core.version>3.4.0</apex.core.version>
+    <apex.core.version>3.6.0</apex.core.version>
     <semver.plugin.skip>false</semver.plugin.skip>
     <surefire.args>-Xmx2048m</surefire.args>
     <powermock.version>1.4.9</powermock.version>
@@ -197,7 +197,6 @@
     <profile>
       <id>all-modules</id>
       <modules>
-        <module>kafka</module>
         <module>hive</module>
         <module>stream</module>
         <module>benchmark</module>
@@ -211,6 +210,7 @@
   <modules>
     <module>library</module>
     <module>contrib</module>
+    <module>kafka</module>
     <module>examples</module>
   </modules>
 
@@ -230,6 +230,31 @@
         <exclusion>
           <groupId>org.hamcrest</groupId>
           <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>${hadoop.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-core-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-beanutils</groupId>
+          <artifactId>commons-beanutils</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-beanutils</groupId>
+          <artifactId>commons-beanutils-core</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

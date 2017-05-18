@@ -166,7 +166,7 @@ class ApexStreamingApp():
         except Py4JJavaError as e:
             import traceback
             traceback.print_exc()
-            print e.java_exception.getMessage()
+            return e.java_exception.getMessage()
 
     def kill(self):
         return self.java_streaming_app.kill()
