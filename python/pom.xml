@@ -76,7 +76,7 @@
               generate runtime classpath for running client in dev environment
               -->
               <outputFile>${project.build.directory}/mvn-generated-runtime-classpath</outputFile>
-              <includeScope>runtime</includeScope>
+              <!--includeScope>runtime</includeScope-->
               <!--excludeGroupIds>org.apache.hadoop</excludeGroupIds-->
             </configuration>
           </execution>
@@ -161,7 +161,6 @@
       <groupId>org.apache.apex</groupId>
       <artifactId>apex-engine</artifactId>
       <version>${apex.core.version}</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.apex</groupId>

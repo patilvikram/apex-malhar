@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
 import org.apache.apex.malhar.lib.window.WindowOption;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
+import org.apache.apex.malhar.python.operator.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.impl.ApexWindowedStreamImpl;
@@ -190,8 +191,8 @@ public class PythonApp implements StreamingApplication
 
     Map<String, String> pythonOperatorEnv = new HashMap<>();
     if (local) {
-      pythonOperatorEnv.put("PYTHON_WORKER_PATH", this.getApexDirectoryPath() + "/runtime/worker.py");
-      pythonOperatorEnv.put("PYTHON_DEPENDENCY_PATH", this.getApexDirectoryPath() + "/runtime/" + py4jSrcZip);
+      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_WORKER_PATH, this.getApexDirectoryPath() + "/runtime/worker.py");
+      pythonOperatorEnv.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, this.getApexDirectoryPath() + "/runtime/" + py4jSrcZip);
     }
 
     Collection<DAG.OperatorMeta> operators = dag.getAllOperatorsMeta();

@@ -1,6 +1,7 @@
 package org.apache.apex.malhar.python.operator.runtime;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,88 +10,91 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 
-public class PythonWorkerContext
+public class PythonWorkerContext implements Serializable
 {
-  private static String PY4J_SRC_ZIP_FILE_NAME = "py4j-0.10.4-src.zip";
-  private static String PYTHON_WORKER_FILE_NAME = "worker.py";
+  public static String PY4J_DEPENDENCY_PATH = "PY4J_DEPENDENCY_PATH";
+  public static String PYTHON_WORKER_PATH = "PYTHON_WORKER_PATH";
+  public static String PY4J_SRC_ZIP_FILE_NAME = "py4j-0.10.4-src.zip";
+  public static String PYTHON_WORKER_FILE_NAME = "worker.py";
+  public static String ENV_VAR_PYTHONPATH = "PYTHONPATH";
+
   private String dependencyPath = null;
   private String workerFilePath = null;
   private String pythonEnvPath = null;
-  private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerContext.class);
 
   private byte[] serializedFunction = null;
   private PythonGenericOperator.OpType opType = null;
-  private Map<String, String> pythonOperatorEnv = new HashMap<String, String>();
+
+  private Map<String, String> environmentData = new HashMap<String, String>();
 
   public PythonWorkerContext()
   {
 
   }
 
-  public PythonWorkerContext(PythonGenericOperator.OpType operationType, byte[] serializedFunction)
+  public PythonWorkerContext(PythonGenericOperator.OpType operationType, byte[] serializedFunction, Map<String, String> environmentData)
   {
-    this.setup();
+    this();
     this.opType = operationType;
     this.serializedFunction = serializedFunction;
+    this.environmentData = environmentData;
   }
 
   public void setup()
   {
-    String PYTHONPATH = System.getenv("PYTHONPATH");
-    LOG.info("PYTHON PATH" + PYTHONPATH);
-
+    LOG.info("Setting up worker context: " + this);
     File py4jDependencyFile = new File("./" + PY4J_SRC_ZIP_FILE_NAME);
+    pythonEnvPath = System.getenv(ENV_VAR_PYTHONPATH);
+    LOG.info("PYTHON PATH: " + pythonEnvPath);
     if (pythonEnvPath != null) {
       pythonEnvPath = py4jDependencyFile.getAbsolutePath() + ":" + pythonEnvPath;
     } else {
       pythonEnvPath = py4jDependencyFile.getAbsolutePath();
     }
-    LOG.info("FINAL PYTHON PATH" + pythonEnvPath);
-    if ((dependencyPath = pythonOperatorEnv.get("PYTHON_DEPENDENCY_PATH")) == null) {
-      dependencyPath = py4jDependencyFile.getAbsolutePath();
+    LOG.info("FINAL PYTHON PATH: " + pythonEnvPath);
+    LOG.info("FINAL DEPENDENCY PATH: " + environmentData.get(PY4J_DEPENDENCY_PATH));
+    if ((this.dependencyPath = environmentData.get(PY4J_DEPENDENCY_PATH)) == null) {
+      this.dependencyPath = py4jDependencyFile.getAbsolutePath();
     }
 
-    if ((workerFilePath = pythonOperatorEnv.get("PYTHON_WORKER_PATH")) == null) {
+    LOG.info("FINAL WORKER PATH: " + environmentData.get(PYTHON_WORKER_PATH));
+    if ((this.workerFilePath = environmentData.get(PYTHON_WORKER_PATH)) == null) {
       File pythonWorkerFile = new File("./" + PYTHON_WORKER_FILE_NAME);
-      workerFilePath = pythonWorkerFile.getAbsolutePath();
+      this.workerFilePath = pythonWorkerFile.getAbsolutePath();
     }
 
-    LOG.info("Python dependency Path " + dependencyPath + " worker Path " + workerFilePath);
+    LOG.info("Python dependency Path " + this.dependencyPath + " worker Path " + this.workerFilePath);
   }
 
-  public String getDependencyPath()
+  public synchronized String getDependencyPath()
   {
-    return dependencyPath;
+    return this.dependencyPath;
   }
 
-  public void setDependencyPath(String dependencyPath)
+  public synchronized String getWorkerFilePath()
   {
-    this.dependencyPath = dependencyPath;
+    return this.workerFilePath;
   }
 
-  public String getWorkerFilePath()
+  public synchronized String getPythonEnvPath()
   {
-    return workerFilePath;
+    return this.pythonEnvPath;
   }
 
-  public void setWorkerFilePath(String workerFilePath)
+  public synchronized  byte[] getSerializedFunction()
   {
-    this.workerFilePath = workerFilePath;
+    return this.serializedFunction;
   }
 
-  public String getPythonEnvPath()
+
+  public synchronized Map<String, String> getEnvironmentData()
   {
-    return pythonEnvPath;
+    return this.environmentData;
   }
 
-  public void setPythonEnvPath(String pythonEnvPath)
+  public synchronized void setEnvironmentData(Map<String, String> environmentData)
   {
-    this.pythonEnvPath = pythonEnvPath;
+    this.environmentData = environmentData;
   }
-
-  public byte[] getSerializedFunction()
-  {
-    return serializedFunction;
-  }
-
 }

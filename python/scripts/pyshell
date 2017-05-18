@@ -151,15 +151,15 @@ if [[ ( -z "$DT_HADOOP" ) || ( "$RUNNING_MODE" == "LOCAL" ) ]]; then
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echo "Starting Apex Runner without hadoop"
   export CLASSPATH=$DT_CLASSPATH
-  "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" "-Dlog4j.configuration=log.properties" >$APEXRUNNERLOG 2>&1 &
+  "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1 &
   APEXRUNNERPID="$!"  
 else
   export HADOOP_USER_CLASSPATH_FIRST=1
   # remove hadoop and duplicate slf4j binding (bash replace is too slow)
   #export HADOOP_CLASSPATH="$HADOOP_CLASSPATH:$BUILD_DIR/libs"
   export HADOOP_CLASSPATH=$(echo -n "$HADOOP_CLASSPATH" | tr ":" "\n" | sed "/slf4j-log4j/d" | sed "/org\/apache\/hadoop/d" | tr "\n" ":")
-  echo "Starting Apex Runner with hadoop" 
-  "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" "-Dlog4j.configuration=/home/vikram/Documents/src/apex-malhar/python/scripts/log.properties">$APEXRUNNERLOG 2>&1  &
+  echo "Starting Apex Runner with hadoop $@" 
+  "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" "-l log.properties"  >$APEXRUNNERLOG 2>&1  &
   APEXRUNNERPID="$!"
 fi
 sleep 5

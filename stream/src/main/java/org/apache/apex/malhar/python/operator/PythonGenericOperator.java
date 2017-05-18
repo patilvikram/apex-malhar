@@ -2,9 +2,7 @@ package org.apache.apex.malhar.python.operator;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +12,6 @@ import org.apache.apex.malhar.python.operator.runtime.PythonWorkerProxy;
 import org.apache.apex.malhar.stream.api.util.LoggerUtils;
 import org.apache.apex.malhar.stream.api.util.NetworkUtils;
 
-import com.datatorrent.api.Attribute;
-import com.datatorrent.api.Attribute.AttributeMap;
 import com.datatorrent.api.Context.DAGContext;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultInputPort;
@@ -38,8 +34,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   protected transient OpType operationType = null;
   private PythonWorkerContext pythonWorkerContext = null;
 
-  private Map<String, String> pythonOperatorEnv = new HashMap<String, String>();
-
+  private Map<String, String> environementData = new HashMap<String, String>();
 
   public enum OpType
   {
@@ -92,22 +87,19 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 
   public void setup(OperatorContext context)
   {
-    AttributeMap attMap = context.getAttributes();
-    Iterator hdfsPaths = attMap.entrySet().iterator();
-
-    while (hdfsPaths.hasNext()) {
-      Entry classpath = (Entry)hdfsPaths.next();
-      LOG.debug(" Printing Entry " + ((Attribute)classpath.getKey()).getName() + " " + classpath.getValue());
-    }
+    LOG.debug("APPLICATION PATH FROM PYTHON OPERATOR" + (String)context.getValue(DAGContext.APPLICATION_PATH));
+    // Setting up context path expliticitly
     this.pythonWorkerContext.setup();
 
-    LOG.trace("APPLICATION PATH FROM PYTHON OPERATOR" + (String)context.getValue(DAGContext.APPLICATION_PATH));
     this.pythonWorkerProxy = new PythonWorkerProxy<>(this.serializedFunction);
+
     int port = NetworkUtils.findAvaliablePort();
+    // Instatntiating Gateway Server
     this.server = new GatewayServer(this.pythonWorkerProxy, port);
     this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.pythonWorkerContext);
     this.server.addListener(this.py4jListener);
     this.server.start(true);
+
 
     int pythonServerStartAttempts = 5;
     while (!this.py4jListener.isPythonServerStarted() && !this.pythonWorkerProxy.isFunctionEnabled() && pythonServerStartAttempts > 0) {
@@ -216,7 +208,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
       ProcessBuilder pb = new ProcessBuilder(new String[0]);
 
       try {
-        LOG.info("STARTING python worker process");
+        LOG.info("Starting python worker process using context: " + this.context);
         LOG.info("Worker File Path : " + this.context.getWorkerFilePath());
         LOG.info("Python Environment Path : " + this.context.getPythonEnvPath());
         Map<String, String> processEnvironment = pb.environment();
@@ -235,9 +227,14 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 
   protected abstract void processTuple(T tuple);
 
-  public void setPythonOperatorEnv(Map<String, String> pythonOperatorEnv)
+  public void setPythonOperatorEnv(Map<String, String> environementData)
   {
-    this.pythonOperatorEnv = pythonOperatorEnv;
+    this.environementData = environementData;
+    if (pythonWorkerContext == null) {
+      this.pythonWorkerContext = new PythonWorkerContext(this.operationType, serializedFunction, environementData);
+    } else {
+      this.pythonWorkerContext.setEnvironmentData(environementData);
+    }
   }
 
 }
