@@ -18,31 +18,12 @@
 #
 
 import types
-from py4j.java_gateway import JavaGateway
+
 import cloudpickle
 from tempfile import TemporaryFile, NamedTemporaryFile
 from uuid import uuid1
 from py4j.protocol import Py4JJavaError
-
-
-class ShellConnector(object):
-    gateway = None
-    entry_point = None
-
-    def __init__(self):
-        self.gateway = JavaGateway()
-
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(ShellConnector, cls).__new__(cls)
-
-        return cls.instance
-
-    def get_jvm_gateway(self):
-        return self.gateway
-
-    def get_entry_point(self):
-        return self.gateway.entry_point
+from shellconn import ShellConnector
 
 
 def createApp(name):

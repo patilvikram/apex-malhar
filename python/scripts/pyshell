@@ -118,6 +118,7 @@ if [ -f "$MVN_GENERATED_PATH" ]; then
     exit 1;
   fi
   DT_CLASSPATH="$DT_CLASSPATH:$DT_CORE_JAR"
+  DT_CLASSPATH=$BASEDIR/libs'/*'":${DT_CLASSPATH}"
   DT_CLASSPATH="$DT_CLASSPATH:`cat $MVN_GENERATED_PATH`"
 else
   # running from installation
@@ -126,8 +127,6 @@ else
     exit 1;
   fi
   BASEDIR=$( cd ${script_dir}/..; pwd -P )
-  DT_CLASSPATH=$BASEDIR/libs'/*'":${DT_CLASSPATH}"
-  DT_CLASSPATH="$DT_CLASSPATH"
 fi
 
 if [ -n "$DT_CLASSPATH" ]; then
@@ -154,9 +153,9 @@ if [[ ( -z "$DT_HADOOP" ) || ( "$RUNNING_MODE" == "LOCAL" ) ]]; then
   "${DT_JAVA:-java}" $DT_CLIENT_OPTS org.apache.apex.malhar.python.PyApex "$@" >$APEXRUNNERLOG 2>&1 &
   APEXRUNNERPID="$!"  
 else
+  echo "Warning: hadoop found.  Running with $DT_HADOOP"
   export HADOOP_USER_CLASSPATH_FIRST=1
   # remove hadoop and duplicate slf4j binding (bash replace is too slow)
-  #export HADOOP_CLASSPATH="$HADOOP_CLASSPATH:$BUILD_DIR/libs"
   export HADOOP_CLASSPATH=$(echo -n "$HADOOP_CLASSPATH" | tr ":" "\n" | sed "/slf4j-log4j/d" | sed "/org\/apache\/hadoop/d" | tr "\n" ":")
   echo "Starting Apex Runner with hadoop $@" 
   "$DT_HADOOP" org.apache.apex.malhar.python.PyApex "$@" "-l log.properties"  >$APEXRUNNERLOG 2>&1  &
