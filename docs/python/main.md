@@ -35,4 +35,4 @@ a=createApp('python_app').fromKafka08('localhost:2181','test_topic') \
 ```
 
 
-Note: Currently developer need to ensure that required python dependencies are installed on Hadoop cluster.  
+Note: Currently developer need to ensure that required python dependencies are installed on Hadoop cluster.

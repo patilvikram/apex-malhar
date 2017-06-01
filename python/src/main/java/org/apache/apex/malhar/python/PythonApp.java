@@ -118,19 +118,19 @@ public class PythonApp implements StreamingApplication
     extendExistingConfig(StramAppLauncher.LIBJARS_CONF_KEY_NAME, jarFiles);
 //    this.getClassPaths();
   }
-
-  public List<String> getClassPaths()
-  {
-    LOG.info("PROCESSING CLASSPATH");
-    List<String> paths = new ArrayList<>();
-    ClassLoader cl = ClassLoader.getSystemClassLoader();
-    URL[] urls = ((URLClassLoader)cl).getURLs();
-    for (URL url : urls) {
-      LOG.info("FOUND FILE PATH" + url.getFile());
-      paths.add(url.getFile());
-    }
-    return paths;
-  }
+//
+//  public List<String> getClassPaths()
+//  {
+//    LOG.info("PROCESSING CLASSPATH");
+//    List<String> paths = new ArrayList<>();
+//    ClassLoader cl = ClassLoader.getSystemClassLoader();
+//    URL[] urls = ((URLClassLoader)cl).getURLs();
+//    for (URL url : urls) {
+//      LOG.info("FOUND FILE PATH" + url.getFile());
+//      paths.add(url.getFile());
+//    }
+//    return paths;
+//  }
 
   public void setRequiredRuntimeFiles()
   {
@@ -142,7 +142,7 @@ public class PythonApp implements StreamingApplication
 
   }
 
-  public void extendExistingConfig(String fileVariable, ArrayList<String> fileList)
+  private void extendExistingConfig(String fileVariable, ArrayList<String> fileList)
   {
     Configuration configuration = this.getConf();
     String fileCSV = configuration.get(fileVariable);
@@ -222,7 +222,7 @@ public class PythonApp implements StreamingApplication
 
   }
 
-  public PythonApp fromFolder(String directoryPath)
+  public PythonApp fromDirectory(String directoryPath)
   {
     apexStream = StreamFactory.fromFolder(directoryPath);
     return this;
@@ -249,7 +249,6 @@ public class PythonApp implements StreamingApplication
   public PythonApp setMap(String name, byte[] searializedFunction)
   {
     apexStream = apexStream.map_func(searializedFunction, Option.Options.name(name));
-
     return this;
   }
 

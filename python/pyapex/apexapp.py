@@ -76,6 +76,7 @@ class ApexStreamingApp():
     def fromKafka09(self, zoopkeepers, topic):
         self.java_streaming_app = self.java_streaming_app.fromKafka09(zoopkeepers, topic)
         return self
+
     def toConsole(self, name=None):
         self.java_streaming_app = self.java_streaming_app.toConsole(name)
         return self
@@ -99,13 +100,6 @@ class ApexStreamingApp():
         self.java_streaming_app = self.java_streaming_app.toFolder( name, file_name, directory_name )
         return self
 
-    def map(self, name, func):
-        if not isinstance(func, types.FunctionType):
-            raise Exception
-
-        serialized_func = self.get_serialized_file_name(name, func)
-        self.java_streaming_app = self.java_streaming_app.setMap(name, serialized_func)
-        return self
 
     def setMap(self, name, func):
         if not isinstance(func, types.FunctionType):
