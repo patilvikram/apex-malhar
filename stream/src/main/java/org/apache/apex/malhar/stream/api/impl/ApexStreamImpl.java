@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -237,7 +237,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
     checkArguments(op, inputPort, outputPort);
 
     DagMeta.NodeMeta nm = null;
-    LOG.error("Adding an operator" + opts);
     if (lastBrick == null) {
       nm = graph.addNode(op, null, null, inputPort, opts);
     } else {
@@ -321,7 +320,6 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   @SuppressWarnings("unchecked")
   public ApexStreamImpl<T> print()
   {
-    LOG.error("Adding console operator");
     ConsoleOutputOperator consoleOutputOperator = new ConsoleOutputOperator();
     addOperator(consoleOutputOperator, (Operator.InputPort<T>)consoleOutputOperator.input, null, Option.Options.name(IDGenerator.generateOperatorIDWithUUID(consoleOutputOperator.getClass())));
     return this;
@@ -480,7 +478,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   @Override
   public ApexStreamImpl<T> map_func(byte[] serializedFunction, Option... opts)
   {
-    LOG.error("Adding Python generic  operator");
+    LOG.debug("Adding Python map operator");
     PythonGenericOperator<T> operator = new PythonMapOperator<T>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
@@ -489,7 +487,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   @Override
   public ApexStreamImpl<T> flatmap_func(byte[] serializedFunction, Option... opts)
   {
-    LOG.error("Adding Python flatmap  operator");
+    LOG.debug("Adding Python flatmap operator");
     PythonGenericOperator<T> operator = new PythonFlatMapOperator<T>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 
@@ -498,7 +496,7 @@ public class ApexStreamImpl<T> implements ApexStream<T>
   @Override
   public ApexStreamImpl<T> filter_func(byte[] serializedFunction, Option... opts)
   {
-    LOG.error("Adding Python filter  operator");
+    LOG.debug("Adding Python filter operator");
     PythonFilterOperator<T> operator = new PythonFilterOperator<>(serializedFunction);
     return addOperator(operator, (Operator.InputPort<T>)operator.in, (Operator.OutputPort<T>)operator.out, opts);
 

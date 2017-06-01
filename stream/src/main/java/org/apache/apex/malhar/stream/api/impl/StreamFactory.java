@@ -56,8 +56,12 @@ public class StreamFactory
     return newStream.addOperator(fileLineInputOperator, null, fileLineInputOperator.output, opts);
   }
 
-
-
+  /**
+   * Allow you to provide data as in-memory list and various options to configure in-memory data input operator
+   * @param input
+   * @param opts
+   * @return
+   */
   public static ApexStream<String> fromData(List<Object> input, Option... opts)
   {
     InMemoryDataInputOperator inMemoryDataInputOperator = new InMemoryDataInputOperator(input);

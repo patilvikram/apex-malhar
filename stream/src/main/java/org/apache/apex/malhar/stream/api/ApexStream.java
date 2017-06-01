@@ -211,28 +211,25 @@ public interface ApexStream<T>
   WindowedStream<T> window(WindowOption windowOption, TriggerOption triggerOption, Duration allowLateness);
 
   /**
-   * Extend the dag by adding one end operator<br>
+   * Add custom serialized Python Function along with options
    * @param serializedFunction stores Serialized Function data
    * @return new stream of type T
    */
-  // Before calling this method call check if its function object
   <STREAM extends ApexStream<T>> STREAM map_func(byte[] serializedFunction, Option... opts);
 
   /**
-   * Extend the dag by adding one end operator<br>
+   * Add custom serialized Python Function along with options
    * @param serializedFunction stores Serialized Function data
    * @return new stream of type T
    */
-  // Before calling this method call check if its function object
   <STREAM extends ApexStream<T>> STREAM flatmap_func(byte[] serializedFunction, Option... opts);
 
 
   /**
-   * Extend the dag by adding one end operator<br>
+   * Add custom serialized Python Function along with options
    * @param serializedFunction stores Serialized Function data
    * @return new stream of type T
    */
-  // Before calling this method call check if its function object
   <STREAM extends ApexStream<T>> STREAM filter_func(byte[] serializedFunction, Option... opts);
 
 
