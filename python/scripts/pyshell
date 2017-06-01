@@ -75,7 +75,6 @@ real_dir() {
   echo $SOURCE_DIR
 }
 script_dir=$(real_dir "${BASH_SOURCE[0]}")
-echo "Script Dir",$script_dir
 # Create missing clirc file for current user
 if [ ! -f "${HOME}/.dt/clirc" ]; then
   mkdir -p "${HOME}/.dt"
@@ -144,7 +143,6 @@ cp $BUILD_DIR/runtime_libs/* $PYAPEX_HOME/jars
 echo "Intiating PYSHELL now " 
 
 ln -sf $PYAPEX_HOME "$script_dir/pyapex"
-echo "$RUNNING_MODE"
 if [[ ( -z "$DT_HADOOP" ) || ( "$RUNNING_MODE" == "LOCAL" ) ]]; then
   echo "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
@@ -165,7 +163,7 @@ sleep 5
 echo "Apex Runner is started as process id: " $APEXRUNNERPID
 if [ "$COMMAND_MODE" = "SHELL_MODE" ]
 then
-   PYTHONPATH=$PYTHONPATH:"python" ipython "$@"
+   PYTHONPATH=$PYTHONPATH:"python" python "$@"
 elif [ "$COMMAND_MODE" = "LAUNCH_MODE" ]
 then
    PYTHONPATH=$PYTHONPATH:"python" python "$EXECUTABLE_FILE" 
