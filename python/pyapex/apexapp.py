@@ -133,6 +133,19 @@ class ApexStreamingApp():
     self.java_streaming_app = self.java_streaming_app.filter(name, serialized_func)
     return self
 
+  def window(self, ):
+    self.java_streaming_app = self.java_streaming_app.window()
+    return self
+
+  def count(self,):
+    self.java_streaming_app = self.java_streaming_app.count("counter")
+    return self
+
+
+  def countByKey(self,):
+    self.java_streaming_app = self.java_streaming_app.countByKey("counter")
+    return self
+
   def launch(self, local_mode=False):
     try:
       self.app_id = self.java_streaming_app.launch(local_mode)

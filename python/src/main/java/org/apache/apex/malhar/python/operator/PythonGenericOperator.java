@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -52,7 +52,6 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   protected transient OpType operationType = null;
   private PythonWorkerContext pythonWorkerContext = null;
   protected Map<String, String> environementData = new HashMap<String, String>();
-
 
   public enum OpType
   {
@@ -108,11 +107,10 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 
     this.pythonWorkerProxy = new PythonWorkerProxy<>(this.serializedFunction);
 
-
     // Instantiating Py4j Gateway Server for Python Worker Process connect back
     boolean gatewayServerLaunchSuccess = false;
     int serverStartAttempts = 5;
-    while (!gatewayServerLaunchSuccess && serverStartAttempts>0) {
+    while (!gatewayServerLaunchSuccess && serverStartAttempts > 0) {
       try {
         this.server = new GatewayServer(this.pythonWorkerProxy, NetworkUtils.findAvaliablePort());
         this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.pythonWorkerContext);
@@ -126,7 +124,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
       }
     }
 
-    if( !gatewayServerLaunchSuccess ){
+    if (!gatewayServerLaunchSuccess) {
       throw new RuntimeException("Failed to launch Gateway Server");
     }
 
@@ -141,7 +139,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
         LOG.error("Python Callback server failed to launch to due: {}" + ex.getMessage());
       }
     }
-    if( !pythonWorkerProxy.isWorkerRegistered()){
+    if (!pythonWorkerProxy.isWorkerRegistered()) {
       this.server.shutdown();
       throw new RuntimeException("Failed to launch Call Back Server");
     }

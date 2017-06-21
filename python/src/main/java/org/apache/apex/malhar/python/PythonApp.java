@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -31,15 +31,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
+import org.apache.apex.malhar.lib.function.Function;
+import org.apache.apex.malhar.lib.window.TriggerOption;
+import org.apache.apex.malhar.lib.window.Tuple;
 import org.apache.apex.malhar.lib.window.WindowOption;
+
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 import org.apache.apex.malhar.python.runtime.PythonApexStreamImpl;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.PythonApexStream;
+import org.apache.apex.malhar.stream.api.WindowedStream;
 import org.apache.apex.malhar.stream.api.impl.ApexStreamImpl;
-import org.apache.apex.malhar.stream.api.impl.ApexWindowedStreamImpl;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -49,6 +53,7 @@ import com.datatorrent.api.DAG;
 import com.datatorrent.api.LocalMode;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
+import com.datatorrent.lib.util.KeyValPair;
 import com.datatorrent.stram.client.StramAppLauncher;
 
 public class PythonApp implements StreamingApplication
@@ -220,7 +225,7 @@ public class PythonApp implements StreamingApplication
     return apexStream;
   }
 
-  public void setApexStream(PythonApexStream apexStream)
+  public void setApexStream(PythonApexStreamImpl apexStream)
   {
     this.apexStream = apexStream;
 
@@ -230,7 +235,10 @@ public class PythonApp implements StreamingApplication
   {
     ApexStream currentStream = StreamFactory.fromFolder(directoryPath);
     if (currentStream instanceof ApexStreamImpl) {
-      apexStream = new PythonApexStreamImpl((ApexStreamImpl)currentStream);
+//      apexStream = new PythonApexStreamImpl();
+      apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
+      //      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
+//      apexStream = (PythonApexStream) pyStream.copyFrom((ApexStreamImpl) currentStream);
     }
     return this;
   }
@@ -239,7 +247,11 @@ public class PythonApp implements StreamingApplication
   {
     ApexStream currentStream = StreamFactory.fromKafka08(zookeepers, topic);
     if (currentStream instanceof ApexStreamImpl) {
-      apexStream = new PythonApexStreamImpl((ApexStreamImpl)currentStream);
+//      apexStream = new PythonApexStreamImpl((ApexStreamImpl)currentStream);
+
+      apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
+//      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
+//      apexStream = (PythonApexStream) pyStream.copyFrom((ApexStreamImpl) currentStream);
     }
     return this;
   }
@@ -249,7 +261,9 @@ public class PythonApp implements StreamingApplication
 
     ApexStream currentStream = StreamFactory.fromData(inputs);
     if (currentStream instanceof ApexStreamImpl) {
-      apexStream = new PythonApexStreamImpl((ApexStreamImpl)currentStream);
+      apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
+//      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
+//      apexStream = (PythonApexStream) pyStream.copyFrom((ApexStreamImpl) currentStream);
     }
     return this;
   }
@@ -258,7 +272,9 @@ public class PythonApp implements StreamingApplication
   {
     ApexStream currentStream = StreamFactory.fromKafka09(zookeepers, topic);
     if (currentStream instanceof ApexStreamImpl) {
-      apexStream = new PythonApexStreamImpl((ApexStreamImpl)currentStream);
+      apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
+//      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
+//    pyStream.copyFrom((ApexStreamImpl)currentStream);
     }
     return this;
   }
@@ -285,16 +301,78 @@ public class PythonApp implements StreamingApplication
   public PythonApp window()
   {
     apexStream = (PythonApexStream)apexStream.window(new WindowOption.GlobalWindow());
+    ((WindowedStream)apexStream).resetTrigger(new TriggerOption().accumulatingAndRetractingFiredPanes().withEarlyFiringsAtEvery(10));
 
+
+    return this;
+  }
+
+  public PythonApp countByKey(String name)
+  {
+
+    Function.ToKeyValue<String, String, Long> toKeyValueFunction = new Function.ToKeyValue<String, String, Long>()
+    {
+      @Override
+      public Tuple<KeyValPair<String, Long>> f(String input)
+      {
+        String[] data = input.split(",");
+
+        return new Tuple.PlainTuple<KeyValPair<String, Long>>(new KeyValPair<String, Long>(data[data.length - 1], 1L));
+      }
+    };
+    if (apexStream instanceof PythonApexStreamImpl) {
+
+      apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).countByKey(toKeyValueFunction, Option.Options.name(name));
+    }
     return this;
   }
 
   public PythonApp count(String name)
   {
-    if (apexStream instanceof ApexWindowedStreamImpl) {
-      apexStream = (PythonApexStream)((ApexWindowedStreamImpl)apexStream).count(Option.Options.name(name));
-      return this;
+    if (apexStream instanceof PythonApexStreamImpl) {
+      apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).count();
     }
+//    Function.MapFunction<Object, Tuple<Long>> kVMap = new Function.MapFunction<Object, Tuple<Long>>()
+//    {
+//      @Override
+//      public Tuple<Long> f(Object input)
+//      {
+//        if (input instanceof Tuple.TimestampedTuple) {
+//          return new Tuple.TimestampedTuple<>(((Tuple.TimestampedTuple)input).getTimestamp(), 1L);
+//        } else {
+//          return new Tuple.TimestampedTuple<>(System.currentTimeMillis(), 1L);
+//        }
+//      }
+//    };
+//
+//    WindowedStream<Tuple<Long>> innerstream = (WindowedStream<Tuple<Long>>)apexStream.map(kVMap);
+//
+//    WindowedOperatorImpl<Long, MutableLong, Long> windowedOperator = new WindowedOperatorImpl<>();
+//    //TODO use other default setting in the future
+//    windowedOperator.setDataStorage(new InMemoryWindowedStorage<MutableLong>());
+//    windowedOperator.setRetractionStorage(new InMemoryWindowedStorage<Long>());
+//    windowedOperator.setWindowStateStorage(new InMemoryWindowedStorage<WindowState>());
+////    if (windowOption != null) {
+//    windowedOperator.setWindowOption(new WindowOption.GlobalWindow());
+////    }
+////    if (triggerOption != null) {
+//    windowedOperator.setTriggerOption(new TriggerOption().withEarlyFiringsAtEvery(5));
+////    }
+////    if (allowedLateness != null) {
+//    windowedOperator.setAllowedLateness(new Duration(100));
+////    }
+//    windowedOperator.setAccumulation(new SumLong());
+//
+//    innerstream.addOperator(windowedOperator, windowedOperator.input, windowedOperator.output, Option.Options.name(name));
+////    if (apexStream instanceof ApexWindowedStreamImpl) {
+////      apexStream = (PythonApexStream)((ApexWindowedStreamImpl)apexStream).count(Option.Options.name(name));
+////      return this;
+////    }
+
+//    if (apexStream instanceof PythonApexStream) {
+//      apexStream = (PythonApexStream)apexStream;
+////      return this;
+//    }
     return this;
   }
 

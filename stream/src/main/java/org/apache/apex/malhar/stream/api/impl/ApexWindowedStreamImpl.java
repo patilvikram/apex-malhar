@@ -62,6 +62,26 @@ public class ApexWindowedStreamImpl<T> extends ApexStreamImpl<T> implements Wind
   protected TriggerOption triggerOption;
 
   protected Duration allowedLateness;
+//
+//  public ApexWindowedStreamImpl( WindowOption windowOption, TriggerOption triggerOption, Duration allowedLateness)
+//  {
+//    super();
+//    this.windowOption = windowOption;
+//    this.triggerOption = triggerOption;
+//    this.allowedLateness = allowedLateness;
+//  }
+//
+  public ApexWindowedStreamImpl()
+  {
+  }
+
+  public ApexWindowedStreamImpl(ApexStreamImpl<T> apexStream)
+  {
+
+    super(apexStream);
+
+  }
+
 
   private static class ConvertFn<T> implements Function.MapFunction<T, Tuple<T>>
   {
@@ -78,9 +98,7 @@ public class ApexWindowedStreamImpl<T> extends ApexStreamImpl<T> implements Wind
   }
 
 
-  public ApexWindowedStreamImpl()
-  {
-  }
+
 
   @Override
   public <STREAM extends WindowedStream<Tuple.WindowedTuple<Long>>> STREAM count(Option... opts)
@@ -157,6 +175,7 @@ public class ApexWindowedStreamImpl<T> extends ApexStreamImpl<T> implements Wind
   {
     WindowedStream<Tuple<T>> innerstream = map(new ConvertFn<T>());
     WindowedOperatorImpl<T, T, T> windowedOperator = createWindowedOperator(reduce);
+
     return innerstream.addOperator(windowedOperator, windowedOperator.input, windowedOperator.output, opts);
   }
 

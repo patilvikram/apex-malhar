@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -32,8 +32,6 @@ public class PythonFlatMapOperator<T> extends PythonGenericOperator<T>
     operationType = OpType.FLAT_MAP;
   }
 
-
-
   public PythonFlatMapOperator(byte[] serializedFunc)
   {
     super(serializedFunc);
@@ -44,7 +42,6 @@ public class PythonFlatMapOperator<T> extends PythonGenericOperator<T>
   protected void processTuple(T tuple)
   {
     LOG.trace("Received Tuple: {}" + tuple);
-
     List<T> result = (List<T>)pythonWorkerProxy.execute(tuple);
     if (result != null) {
       LOG.trace("List response received: {}" + result);
@@ -52,7 +49,7 @@ public class PythonFlatMapOperator<T> extends PythonGenericOperator<T>
         for (T item : result) {
           out.emit(item);
         }
-      }else{
+      } else {
         LOG.warn("Returned response is not list: {}" + result);
       }
     }

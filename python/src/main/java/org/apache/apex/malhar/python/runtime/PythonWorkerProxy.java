@@ -18,14 +18,9 @@
  */
 package org.apache.apex.malhar.python.runtime;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.apex.malhar.python.runtime.PythonWorker;
-
 import py4j.Py4JException;
 
 public class PythonWorkerProxy<T>
@@ -35,10 +30,6 @@ public class PythonWorkerProxy<T>
   private boolean functionEnabled = false;
   private byte[] serializedFunction = null;
   private boolean workerRegistered = false;
-
-  protected Map<String, String> tupleList = new HashMap<String, String>();
-
-  int counter = 0;
 
   public PythonWorkerProxy(byte[] serializedFunc)
   {
@@ -54,21 +45,15 @@ public class PythonWorkerProxy<T>
       try {
         result = registerdPythonWorker.execute(tuple);
         LOG.trace("Processed tuple: {}", result);
+        return result;
       } catch (Py4JException ex) {
         LOG.error("Exception encountered while executing operation for tuple: {}  Message: {}", tuple, ex.getMessage());
+      } finally {
+        return null;
       }
-      Integer counterString = new Integer(counter);
-      for (String key : tupleList.keySet()) {
-        LOG.error("Updated Keys status: {} {}",  key, tupleList.get(key));
-
-      }
-      LOG.error("Tuple List count: {}", tupleList.size());
-      counter++;
-
-      return result;
-
     }
     return null;
+
   }
 
   public void register(PythonWorker pythonWorker)
@@ -84,7 +69,6 @@ public class PythonWorkerProxy<T>
     if (this.isWorkerRegistered() && !isFunctionEnabled()) {
       LOG.debug("Setting Serialized function");
       this.registerdPythonWorker.setFunction(this.serializedFunction, opType);
-      this.registerdPythonWorker.setState(tupleList);
       this.functionEnabled = true;
       LOG.debug("Set Serialized function");
     }

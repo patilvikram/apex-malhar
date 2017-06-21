@@ -65,7 +65,7 @@ public class PythonWorkerContext implements Serializable
       this.workerFilePath = pythonWorkerFile.getAbsolutePath();
     }
 
-    LOG.info("Python dependency Path {} worker Path {}" , this.dependencyPath, this.workerFilePath);
+    LOG.info("Python dependency Path {} worker Path {}", this.dependencyPath, this.workerFilePath);
   }
 
   public synchronized String getDependencyPath()
@@ -83,11 +83,10 @@ public class PythonWorkerContext implements Serializable
     return this.pythonEnvPath;
   }
 
-  public synchronized  byte[] getSerializedFunction()
+  public synchronized byte[] getSerializedFunction()
   {
     return this.serializedFunction;
   }
-
 
   public synchronized Map<String, String> getEnvironmentData()
   {

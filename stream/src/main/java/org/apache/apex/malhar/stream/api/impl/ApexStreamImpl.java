@@ -7,15 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
-<<<<<<< HEAD
-<<<<<<< HEAD
  *  http://www.apache.org/licenses/LICENSE-2.0
-=======
- * http://www.apache.org/licenses/LICENSE-2.0
->>>>>>> f9250d8... Reformatted code
-=======
- *  http://www.apache.org/licenses/LICENSE-2.0
->>>>>>> e4d3bf9... Fixed style related changes
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -159,6 +151,11 @@ public class ApexStreamImpl<T> implements ApexStream<T>
 
   }
 
+  public DagMeta getGraph()
+  {
+    return graph;
+  }
+
   /**
    * Graph behind the stream
    */
@@ -259,10 +256,11 @@ public class ApexStreamImpl<T> implements ApexStream<T>
       newBrick.lastStream = Pair.<Operator.OutputPort, Operator.InputPort>of(lastBrick.lastOutput, inputPort);
     }
 
-    if (this.getClass() == ApexStreamImpl.class || this.getClass() == ApexWindowedStreamImpl.class) {
+    if (this instanceof ApexStream) {
       return (STREAM)newStream(this.graph, newBrick);
     } else {
       try {
+        LOG.debug(" Creating ApexStreamImpl explicitly");
         return (STREAM)this.getClass().getConstructor(ApexStreamImpl.class).newInstance(newStream(this.graph, newBrick));
       } catch (Exception e) {
         throw new RuntimeException("You have to override the default constructor with ApexStreamImpl as default parameter", e);
