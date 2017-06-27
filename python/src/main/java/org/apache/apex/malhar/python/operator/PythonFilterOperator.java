@@ -21,6 +21,8 @@ package org.apache.apex.malhar.python.operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.PythonConstants;
+
 import com.datatorrent.api.DefaultOutputPort;
 
 public class PythonFilterOperator<T> extends PythonGenericOperator<T>
@@ -32,20 +34,20 @@ public class PythonFilterOperator<T> extends PythonGenericOperator<T>
 
   public PythonFilterOperator()
   {
-    operationType = OpType.FILTER;
+    this(null);
   }
 
   public PythonFilterOperator(byte[] serializedFunc)
   {
-    super(serializedFunc);
-    operationType = OpType.FILTER;
+
+    super(PythonConstants.OpType.FILTER, serializedFunc);
   }
 
   @Override
   protected void processTuple(T tuple)
   {
     LOG.trace("Received Tuple: {}", tuple);
-    Object result = pythonWorkerProxy.execute(tuple);
+    Object result = getServer().getProxy().execute(tuple);
     if (result instanceof Boolean) {
       Boolean b = (Boolean)result;
       LOG.trace("Filter response received: {}" + b);

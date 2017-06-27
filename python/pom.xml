@@ -145,7 +145,47 @@
             </execution>
           </executions>
         </plugin>
-
+	<!-- build python library -->
+        <!--<plugin>-->
+         <!--<artifactId>exec-maven-plugin</artifactId>-->
+  			<!--<groupId>org.codehaus.mojo</groupId>-->
+  				<!--<executions>-->
+    				<!--<execution>-->
+						<!--<id>Python Build</id>-->
+						<!--<phase>generate-sources</phase>-->
+						<!--<goals>-->
+							<!--<goal>exec</goal>-->
+						<!--</goals>-->
+						<!--<configuration>-->
+							<!--<executable>python</executable>-->
+							<!--<arguments>-->
+								<!--<argument>apex-python/setup.py</argument>-->
+								<!--<argument>sdist</argument>-->
+								<!--<argument>"&#45;&#45;formats=zip,tar,gztar"</argument>-->
+							<!--</arguments>    -->
+				        <!--</configuration>-->
+					<!--</execution>-->
+				<!--</executions>-->
+		<!--</plugin>-->
+    <plugin>
+         <artifactId>exec-maven-plugin</artifactId>
+  			<groupId>org.codehaus.mojo</groupId>
+  				<executions>
+    				<execution><!-- Run our version calculation script -->
+						<id>Python Zip Build</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>create_zip.sh</executable>
+							<arguments>
+								<argument>0.0.4</argument>
+							</arguments>    
+				        </configuration>
+					</execution>
+				</executions>
+		</plugin>
     </plugins>
   </build>
 

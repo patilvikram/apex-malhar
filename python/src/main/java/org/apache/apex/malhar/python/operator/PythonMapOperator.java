@@ -21,19 +21,23 @@ package org.apache.apex.malhar.python.operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.PythonConstants;
+
 public class PythonMapOperator<T> extends PythonGenericOperator<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonMapOperator.class);
 
+
   public PythonMapOperator()
   {
-    operationType = OpType.MAP;
+
+   this(null);
   }
 
   public PythonMapOperator(byte[] serializedFunc)
   {
-    super(serializedFunc);
-    operationType = OpType.MAP;
+    super(PythonConstants.OpType.MAP, serializedFunc);
+
   }
 
   @Override
@@ -41,7 +45,7 @@ public class PythonMapOperator<T> extends PythonGenericOperator<T>
   {
 
     LOG.trace("Received Tuple: {} ", tuple);
-    Object result = pythonWorkerProxy.execute(tuple);
+    Object result = getServer().getProxy().execute(tuple);
     if (result != null) {
       LOG.trace("Response received: {} ", result);
       out.emit((T)result);

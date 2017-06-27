@@ -26,30 +26,32 @@ import py4j.Py4JException;
 public class PythonWorkerProxy<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerProxy.class);
-  private PythonWorker registerdPythonWorker = null;
+
+
+  private PythonWorker worker = null;
   private boolean functionEnabled = false;
-  private byte[] serializedFunction = null;
+  private byte[] serializedData = null;
   private boolean workerRegistered = false;
 
   public PythonWorkerProxy(byte[] serializedFunc)
   {
-    this.serializedFunction = serializedFunc;
+    this.serializedData = serializedFunc;
   }
 
   public Object execute(T tuple)
   {
-    if (registerdPythonWorker != null) {
+    if (worker != null) {
 
       Object result = null;
       LOG.trace("Processing tuple: {}", tuple);
       try {
-        result = registerdPythonWorker.execute(tuple);
+        result = worker.execute(tuple);
         LOG.trace("Processed tuple: {}", result);
         return result;
       } catch (Py4JException ex) {
         LOG.error("Exception encountered while executing operation for tuple: {}  Message: {}", tuple, ex.getMessage());
       } finally {
-        return null;
+
       }
     }
     return null;
@@ -59,20 +61,31 @@ public class PythonWorkerProxy<T>
   public void register(PythonWorker pythonWorker)
   {
     LOG.debug("Registering python worker now");
-    this.registerdPythonWorker = pythonWorker;
+    this.worker = pythonWorker;
     this.workerRegistered = true;
     LOG.debug("Python worker registered");
   }
 
-  public void setFunction(String opType)
+  public void setSerializedData(String opType)
   {
     if (this.isWorkerRegistered() && !isFunctionEnabled()) {
       LOG.debug("Setting Serialized function");
-      this.registerdPythonWorker.setFunction(this.serializedFunction, opType);
+      this.worker.setFunction(this.serializedData, opType);
       this.functionEnabled = true;
       LOG.debug("Set Serialized function");
     }
   }
+
+  public byte[] getSerializedData(String opType)
+  {
+   return serializedData;
+  }
+
+  public PythonWorker getWorker()
+  {
+    return worker;
+  }
+
 
   public boolean isWorkerRegistered()
   {

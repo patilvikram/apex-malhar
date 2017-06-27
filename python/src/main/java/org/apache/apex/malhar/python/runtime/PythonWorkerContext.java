@@ -2,29 +2,40 @@ package org.apache.apex.malhar.python.runtime;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.PythonConstants;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
+
+import org.apache.commons.lang3.StringUtils;
+
+import static org.apache.apex.malhar.PythonConstants.PY4J_SRC_ZIP_FILE_NAME;
+import static org.apache.apex.malhar.PythonConstants.PYTHON_APEX_ZIP_NAME;
+import static org.apache.apex.malhar.PythonConstants.PYTHON_WORKER_FILE_NAME;
 
 public class PythonWorkerContext implements Serializable
 {
   public static String PY4J_DEPENDENCY_PATH = "PY4J_DEPENDENCY_PATH";
   public static String PYTHON_WORKER_PATH = "PYTHON_WORKER_PATH";
-  public static String PY4J_SRC_ZIP_FILE_NAME = "py4j-0.10.4-src.zip";
-  public static String PYTHON_WORKER_FILE_NAME = "worker.py";
+  public static String PYTHON_APEX_PATH = "PYTHON_APEX_PATH";
   public static String ENV_VAR_PYTHONPATH = "PYTHONPATH";
 
-  private String dependencyPath = null;
-  private String workerFilePath = null;
-  private String pythonEnvPath = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerContext.class);
 
+  private String py4jDependencyPath = null;
+  private String apexSourcePath = null;
+  private String workerFilePath = null;
+
+  private String pythonEnvPath = null;
+
   private byte[] serializedFunction = null;
-  private PythonGenericOperator.OpType opType = null;
+  private PythonConstants.OpType opType = null;
 
   // environment data is set explicitly with local paths for managing local mode execution
   private Map<String, String> environmentData = new HashMap<String, String>();
@@ -34,7 +45,8 @@ public class PythonWorkerContext implements Serializable
 
   }
 
-  public PythonWorkerContext(PythonGenericOperator.OpType operationType, byte[] serializedFunction, Map<String, String> environmentData)
+  public PythonWorkerContext(
+    PythonConstants.OpType operationType, byte[] serializedFunction, Map<String, String> environmentData)
   {
     this();
     this.opType = operationType;
@@ -46,17 +58,29 @@ public class PythonWorkerContext implements Serializable
   {
     LOG.info("Setting up worker context: {}", this);
     File py4jDependencyFile = new File("./" + PY4J_SRC_ZIP_FILE_NAME);
+    File pythonApexSrcZip = new File("./" + PYTHON_APEX_ZIP_NAME);
+    List<String> dependencyFilePaths = new ArrayList<String>();
+    dependencyFilePaths.add(py4jDependencyFile.getAbsolutePath());
+    dependencyFilePaths.add(pythonApexSrcZip.getAbsolutePath());
+
     pythonEnvPath = System.getenv(ENV_VAR_PYTHONPATH);
+
     LOG.info("Found python environment path: {}", pythonEnvPath);
     if (pythonEnvPath != null) {
-      pythonEnvPath = py4jDependencyFile.getAbsolutePath() + ":" + pythonEnvPath;
+      dependencyFilePaths.add(pythonEnvPath);
+      pythonEnvPath = StringUtils.join(dependencyFilePaths, ":");
     } else {
-      pythonEnvPath = py4jDependencyFile.getAbsolutePath();
+      pythonEnvPath = StringUtils.join(dependencyFilePaths, ":");
     }
     LOG.debug("Final python environment path with Py4j depenency path: {}", pythonEnvPath);
-    LOG.info("FINAL DEPENDENCY PATH: {}", environmentData.get(PY4J_DEPENDENCY_PATH));
-    if ((this.dependencyPath = environmentData.get(PY4J_DEPENDENCY_PATH)) == null) {
-      this.dependencyPath = py4jDependencyFile.getAbsolutePath();
+    LOG.info("FINAL DEPENDENCY PATH: {}", StringUtils.join(dependencyFilePaths, ":"));
+
+    if ((this.apexSourcePath = environmentData.get(PYTHON_APEX_PATH)) == null) {
+      this.apexSourcePath = pythonApexSrcZip.getAbsolutePath();
+    }
+
+    if ((this.py4jDependencyPath = environmentData.get(PY4J_DEPENDENCY_PATH)) == null) {
+      this.py4jDependencyPath = py4jDependencyFile.getAbsolutePath();
     }
 
     LOG.info("FINAL WORKER PATH: {}", environmentData.get(PYTHON_WORKER_PATH));
@@ -65,12 +89,12 @@ public class PythonWorkerContext implements Serializable
       this.workerFilePath = pythonWorkerFile.getAbsolutePath();
     }
 
-    LOG.info("Python dependency Path {} worker Path {}", this.dependencyPath, this.workerFilePath);
+    LOG.info("Python dependency Path {} worker Path {}", this.py4jDependencyPath, this.workerFilePath);
   }
 
-  public synchronized String getDependencyPath()
+  public synchronized String getPy4jDependencyPath()
   {
-    return this.dependencyPath;
+    return this.py4jDependencyPath;
   }
 
   public synchronized String getWorkerFilePath()
@@ -97,4 +121,15 @@ public class PythonWorkerContext implements Serializable
   {
     this.environmentData = environmentData;
   }
+
+  public String getApexSourcePath()
+  {
+    return apexSourcePath;
+  }
+
+  public void setApexSourcePath(String apexSourcePath)
+  {
+    this.apexSourcePath = apexSourcePath;
+  }
+
 }

@@ -30,6 +30,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.PythonConstants;
 import org.apache.apex.malhar.lib.fs.GenericFileOutputOperator;
 import org.apache.apex.malhar.lib.function.Function;
 import org.apache.apex.malhar.lib.window.TriggerOption;
@@ -37,6 +38,7 @@ import org.apache.apex.malhar.lib.window.Tuple;
 import org.apache.apex.malhar.lib.window.WindowOption;
 
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
+import org.apache.apex.malhar.python.operator.interfaces.PythonAccumulator;
 import org.apache.apex.malhar.python.runtime.PythonApexStreamImpl;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
@@ -47,6 +49,7 @@ import org.apache.apex.malhar.stream.api.impl.ApexStreamImpl;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.Options;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import com.datatorrent.api.DAG;
@@ -63,7 +66,7 @@ public class PythonApp implements StreamingApplication
   private StreamFactory streamFactory;
   private ApplicationId appId = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonApp.class);
-  private String py4jSrcZip = "py4j-0.10.4-src.zip";
+
   private PythonAppManager manager = null;
   private String name;
   private Configuration conf;
@@ -113,7 +116,7 @@ public class PythonApp implements StreamingApplication
   {
 
     LOG.debug("PYAPEX_HOME: {}" + getApexDirectoryPath());
-    File dir = new File(this.getApexDirectoryPath() + "/jars/");
+    File dir = new File(this.getApexDirectoryPath() + "/deps/");
     File[] files = dir.listFiles();
     ArrayList<String> jarFiles = new ArrayList<String>();
     for (File jarFile : files) {
@@ -121,8 +124,10 @@ public class PythonApp implements StreamingApplication
       jarFiles.add(jarFile.getAbsolutePath());
 
     }
-    jarFiles.add(this.getApexDirectoryPath() + "/runtime/" + py4jSrcZip);
-    jarFiles.add(this.getApexDirectoryPath() + "/runtime/worker.py");
+    jarFiles.add(this.getApexDirectoryPath() + "/deps/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
+    jarFiles.add(this.getApexDirectoryPath() + "/src/pyapex/runtime/" + PythonConstants.PYTHON_WORKER_FILE_NAME);
+    jarFiles.add(this.getApexDirectoryPath() + "/deps/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
+
     extendExistingConfig(StramAppLauncher.LIBJARS_CONF_KEY_NAME, jarFiles);
 //    this.getClassPaths();
   }
@@ -142,10 +147,12 @@ public class PythonApp implements StreamingApplication
 
   public void setRequiredRuntimeFiles()
   {
-    String APEX_DIRECTORY_PATH = System.getenv("PYAPEX_HOME");
+
     ArrayList<String> files = new ArrayList<String>();
-    files.add(APEX_DIRECTORY_PATH + "/runtime/" + py4jSrcZip);
-    files.add(APEX_DIRECTORY_PATH + "/runtime/worker.py");
+    files.add(this.getApexDirectoryPath() + "/deps/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
+    files.add(this.getApexDirectoryPath() + "/src/pyapex/runtime/" + PythonConstants.PYTHON_WORKER_FILE_NAME);
+    files.add(this.getApexDirectoryPath() + "/deps/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
+
     extendExistingConfig(StramAppLauncher.FILES_CONF_KEY_NAME, files);
 
   }
@@ -200,8 +207,10 @@ public class PythonApp implements StreamingApplication
 
     Map<String, String> pythonOperatorEnv = new HashMap<>();
     if (local) {
-      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_WORKER_PATH, this.getApexDirectoryPath() + "/runtime/worker.py");
-      pythonOperatorEnv.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, this.getApexDirectoryPath() + "/runtime/" + py4jSrcZip);
+      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_WORKER_PATH, this.getApexDirectoryPath() + "/runtime/"+PythonConstants.PYTHON_WORKER_FILE_NAME);
+      pythonOperatorEnv.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, this.getApexDirectoryPath() + "/runtime/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
+      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_APEX_PATH, this.getApexDirectoryPath() + "/build/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
+
     }
 
     Collection<DAG.OperatorMeta> operators = dag.getAllOperatorsMeta();
@@ -209,7 +218,7 @@ public class PythonApp implements StreamingApplication
       if (operatorMeta.getOperator() instanceof PythonGenericOperator) {
         LOG.debug("Updating python operator: {}" + operatorMeta.getName());
         PythonGenericOperator operator = ((PythonGenericOperator)operatorMeta.getOperator());
-        operator.setPythonOperatorEnv(pythonOperatorEnv);
+        operator.getServer().setPythonOperatorEnv(pythonOperatorEnv);
       }
     }
     return manager.launch();
@@ -303,7 +312,6 @@ public class PythonApp implements StreamingApplication
     apexStream = (PythonApexStream)apexStream.window(new WindowOption.GlobalWindow());
     ((WindowedStream)apexStream).resetTrigger(new TriggerOption().accumulatingAndRetractingFiredPanes().withEarlyFiringsAtEvery(10));
 
-
     return this;
   }
 
@@ -332,47 +340,15 @@ public class PythonApp implements StreamingApplication
     if (apexStream instanceof PythonApexStreamImpl) {
       apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).count();
     }
-//    Function.MapFunction<Object, Tuple<Long>> kVMap = new Function.MapFunction<Object, Tuple<Long>>()
-//    {
-//      @Override
-//      public Tuple<Long> f(Object input)
-//      {
-//        if (input instanceof Tuple.TimestampedTuple) {
-//          return new Tuple.TimestampedTuple<>(((Tuple.TimestampedTuple)input).getTimestamp(), 1L);
-//        } else {
-//          return new Tuple.TimestampedTuple<>(System.currentTimeMillis(), 1L);
-//        }
-//      }
-//    };
-//
-//    WindowedStream<Tuple<Long>> innerstream = (WindowedStream<Tuple<Long>>)apexStream.map(kVMap);
-//
-//    WindowedOperatorImpl<Long, MutableLong, Long> windowedOperator = new WindowedOperatorImpl<>();
-//    //TODO use other default setting in the future
-//    windowedOperator.setDataStorage(new InMemoryWindowedStorage<MutableLong>());
-//    windowedOperator.setRetractionStorage(new InMemoryWindowedStorage<Long>());
-//    windowedOperator.setWindowStateStorage(new InMemoryWindowedStorage<WindowState>());
-////    if (windowOption != null) {
-//    windowedOperator.setWindowOption(new WindowOption.GlobalWindow());
-////    }
-////    if (triggerOption != null) {
-//    windowedOperator.setTriggerOption(new TriggerOption().withEarlyFiringsAtEvery(5));
-////    }
-////    if (allowedLateness != null) {
-//    windowedOperator.setAllowedLateness(new Duration(100));
-////    }
-//    windowedOperator.setAccumulation(new SumLong());
-//
-//    innerstream.addOperator(windowedOperator, windowedOperator.input, windowedOperator.output, Option.Options.name(name));
-////    if (apexStream instanceof ApexWindowedStreamImpl) {
-////      apexStream = (PythonApexStream)((ApexWindowedStreamImpl)apexStream).count(Option.Options.name(name));
-////      return this;
-////    }
+    return this;
+  }
 
-//    if (apexStream instanceof PythonApexStream) {
-//      apexStream = (PythonApexStream)apexStream;
-////      return this;
-//    }
+  public PythonApp reduce(String name, byte[] searializedFunction)
+  {
+
+    if (apexStream instanceof PythonApexStreamImpl) {
+      apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).accumulate(new PythonAccumulator(searializedFunction), Option.Options.name(name));
+    }
     return this;
   }
 

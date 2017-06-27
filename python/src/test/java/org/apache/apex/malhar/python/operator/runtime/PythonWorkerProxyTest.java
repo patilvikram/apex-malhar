@@ -76,7 +76,7 @@ public class PythonWorkerProxyTest
     PythonWorkerProxy workerProxy = new PythonWorkerProxy(functionData.getBytes());
     PythonTestWorker worker = new PythonTestWorker();
     workerProxy.register(worker);
-    workerProxy.setFunction("DUMMY_OPERATION");
+    workerProxy.setSerializedData("DUMMY_OPERATION");
     Assert.assertEquals("TUPLE", worker.execute("TUPLE"));
   }
 

@@ -100,8 +100,10 @@ fi
 
 export HADOOP_CLIENT_OPTS="$DT_CLIENT_OPTS"
 
+PYTHON_BUILD="$( dirname "$0" )/../dist"
 BUILD_DIR="$( dirname "$0" )/../target"
-PYAPEX_HOME="`pwd`/../pyapex"
+PYAPEX_HOME="`pwd`/../apex-python"
+
 if [ -z "$DT_HADOOP" ]; then
   echo "Development Mode without Hadoop Installation: Using jars from mvn generated path"
   MVN_GENERATED_PATH="$BUILD_DIR/mvn-generated-runtime-classpath"
@@ -139,11 +141,21 @@ APEXRUNERPID=0
 APEXRUNNERLOG="$( dirname "$0")/ApexRunner.out"
 rm -f $APEXRUNNERLOG
 export PYAPEX_HOME=$PYAPEX_HOME
-cp $BUILD_DIR/runtime_libs/* $PYAPEX_HOME/jars
-cp $DT_CORE_JAR $PYAPEX_HOME/jars
+cp $BUILD_DIR/runtime_libs/* $PYAPEX_HOME/deps
+cp $DT_CORE_JAR $PYAPEX_HOME/deps
+echo "PYAPEX_HOME $PYAPEX_HOME"
+
 echo "Intiating PYSHELL now " 
 
-ln -sf $PYAPEX_HOME "$script_dir/pyapex"
+#ln -sf $PYAPEX_HOME "$script_dir/pyapex"
+if [ -z "$PYTHONPATH" ] 
+then
+  export PYTHONPATH="$PYAPEX_HOME/deps/pyapex-0.0.4-src.zip"
+
+else
+  export PYTHONPATH="$PYTHONPATH:$PYAPEX_HOME/deps/pyapex-0.0.4-src.zip"
+fi
+echo $PYTHONPATH
 if [[ ( -z "$DT_HADOOP" ) || ( "$RUNNING_MODE" == "LOCAL" ) ]]; then
   echo "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."
   echoerr "Warning: hadoop executable not found.  Running standalone with ${DT_JAVA:-java}."

@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.PythonConstants;
 import org.apache.apex.malhar.python.operator.PythonMapOperator;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.commons.codec.binary.Base64;
@@ -117,12 +118,13 @@ public class PythonOperatorTest
     Map<String, String> environmentData = new HashMap<>();
 
     final String cwd = System.getProperty("user.dir");
-    String pythonRuntimeDirectory = cwd + "/../python/pyapex/runtime";
+    String pythonRuntimeDirectory = cwd + "/../python/apex-python/src/pyapex/runtime";
     LOG.debug("Current working directory:" + pythonRuntimeDirectory);
-    environmentData.put(PythonWorkerContext.PYTHON_WORKER_PATH, pythonRuntimeDirectory + "/" + PythonWorkerContext.PYTHON_WORKER_FILE_NAME);
-    environmentData.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, pythonRuntimeDirectory + "/" + PythonWorkerContext.PY4J_SRC_ZIP_FILE_NAME);
+    environmentData.put(PythonWorkerContext.PYTHON_WORKER_PATH, pythonRuntimeDirectory + "/" + PythonConstants.PYTHON_WORKER_FILE_NAME);
+    environmentData.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, pythonRuntimeDirectory + "/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
+    environmentData.put(PythonWorkerContext.PYTHON_APEX_PATH, pythonRuntimeDirectory + "/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
     PythonMapOperator<Integer> mapOperator = new PythonMapOperator<Integer>(decoded);
-    mapOperator.setPythonOperatorEnv(environmentData);
+    mapOperator.getServer().setPythonOperatorEnv(environmentData);
 
     dag.addOperator("mapOperator", mapOperator);
 
@@ -142,7 +144,7 @@ public class PythonOperatorTest
       }
     });
 
-    lc.run(50000);
+    lc.run(100000);
 
     Assert.assertEquals(NumTuples, TupleCount);
     Assert.assertEquals(90, tupleSumInResultCollector);

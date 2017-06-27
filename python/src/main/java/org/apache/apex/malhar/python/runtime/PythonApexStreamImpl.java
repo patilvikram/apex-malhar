@@ -4,12 +4,18 @@ import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.lib.window.Accumulation;
 import org.apache.apex.malhar.lib.window.TriggerOption;
 import org.apache.apex.malhar.lib.window.WindowOption;
+import org.apache.apex.malhar.lib.window.WindowState;
+import org.apache.apex.malhar.lib.window.impl.InMemoryWindowedStorage;
+import org.apache.apex.malhar.lib.window.impl.WindowedOperatorImpl;
 import org.apache.apex.malhar.python.operator.PythonFilterOperator;
 import org.apache.apex.malhar.python.operator.PythonFlatMapOperator;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 import org.apache.apex.malhar.python.operator.PythonMapOperator;
+import org.apache.apex.malhar.python.operator.PythonWindowedOperator;
+import org.apache.apex.malhar.python.operator.interfaces.PythonAccumulator;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.PythonApexStream;
@@ -110,6 +116,35 @@ public class PythonApexStreamImpl<T> extends ApexWindowedStreamImpl<T> implement
   }
 
 
+  /**
+   * Create the windowed operator for windowed transformation
+   * @param accumulationFn
+   * @param <IN>
+   * @param <ACCU>
+   * @param <OUT>
+   * @return
+   */
+//  @Override
+  protected <IN, ACCU, OUT> WindowedOperatorImpl<IN, ACCU, OUT> createWindowedOperator(Accumulation<? super IN, ACCU, OUT> accumulationFn)
+  {
+
+    PythonWindowedOperator windowedOperator = new PythonWindowedOperator(((PythonAccumulator)accumulationFn).getSerialiedData());
+    //TODO use other default setting in the future
+    windowedOperator.setDataStorage(new InMemoryWindowedStorage<ACCU>());
+    windowedOperator.setRetractionStorage(new InMemoryWindowedStorage<OUT>());
+    windowedOperator.setWindowStateStorage(new InMemoryWindowedStorage<WindowState>());
+    if (windowOption != null) {
+      windowedOperator.setWindowOption(windowOption);
+    }
+    if (triggerOption != null) {
+      windowedOperator.setTriggerOption(triggerOption);
+    }
+    if (allowedLateness != null) {
+      windowedOperator.setAllowedLateness(allowedLateness);
+    }
+    windowedOperator.setAccumulation(accumulationFn);
+    return windowedOperator;
+  }
 
 
 

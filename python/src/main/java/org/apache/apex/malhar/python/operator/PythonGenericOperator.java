@@ -25,6 +25,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.apex.malhar.PythonConstants;
+import org.apache.apex.malhar.python.runtime.PythonServer;
+import org.apache.apex.malhar.python.runtime.PythonWorker;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.python.runtime.PythonWorkerProxy;
 import org.apache.apex.malhar.python.util.LoggerUtils;
@@ -43,35 +46,15 @@ import py4j.Py4JServerConnection;
 
 public abstract class PythonGenericOperator<T> extends BaseOperator
 {
-
-  protected transient GatewayServer server = null;
-  protected transient PythonGatewayServerListenser py4jListener = null;
-  protected transient PythonWorkerProxy<T> pythonWorkerProxy = null;
-  protected byte[] serializedFunction = null;
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
-  protected transient OpType operationType = null;
-  private PythonWorkerContext pythonWorkerContext = null;
-  protected Map<String, String> environementData = new HashMap<String, String>();
+  protected byte[] serializedFunction = null;
+//  protected Map<String, String> environementData = new HashMap<String, String>();
 
-  public enum OpType
-  {
-    MAP("MAP"),
-    FLAT_MAP("FLAT_MAP"),
-    FILTER("FILTER");
 
-    private String operationName = null;
+  private PythonServer server = null;
+  protected transient PythonConstants.OpType operationType = null;
 
-    OpType(String name)
-    {
-      this.operationName = name;
-    }
 
-    public String getType()
-    {
-      return operationName;
-    }
-
-  }
 
   public final transient DefaultInputPort<T> in = new DefaultInputPort<T>()
   {
@@ -88,14 +71,15 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 
   public PythonGenericOperator()
   {
-    this(null);
+    this(null,null);
 
   }
 
-  public PythonGenericOperator(byte[] serializedFunc)
+  public PythonGenericOperator(PythonConstants.OpType operationType, byte[] serializedFunc)
   {
     this.serializedFunction = serializedFunc;
-    this.pythonWorkerContext = new PythonWorkerContext(this.operationType, serializedFunc, environementData);
+    this.operationType = operationType;
+    this.server = new PythonServer(this.operationType, serializedFunc);
 
   }
 
@@ -103,51 +87,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
   {
     LOG.debug("Application path from Python Operator: {} ", (String)context.getValue(DAGContext.APPLICATION_PATH));
     // Setting up context path explicitly for handling local as well Hadoop Based Application Development
-    this.pythonWorkerContext.setup();
-
-    this.pythonWorkerProxy = new PythonWorkerProxy<>(this.serializedFunction);
-
-    // Instantiating Py4j Gateway Server for Python Worker Process connect back
-    boolean gatewayServerLaunchSuccess = false;
-    int serverStartAttempts = 5;
-    while (!gatewayServerLaunchSuccess && serverStartAttempts > 0) {
-      try {
-        this.server = new GatewayServer(this.pythonWorkerProxy, NetworkUtils.findAvaliablePort());
-        this.py4jListener = new PythonGenericOperator.PythonGatewayServerListenser(this.server, this.pythonWorkerContext);
-        this.server.addListener(this.py4jListener);
-        this.server.start(true);
-        gatewayServerLaunchSuccess = true;
-        --serverStartAttempts;
-      } catch (Exception ex) {
-        LOG.error("Gateway server failed to launch to due: {}" + ex.getMessage());
-        gatewayServerLaunchSuccess = false;
-      }
-    }
-
-    if (!gatewayServerLaunchSuccess) {
-      throw new RuntimeException("Failed to launch Gateway Server");
-    }
-
-    serverStartAttempts = 5;
-
-    while (!this.py4jListener.isPythonServerStarted() && !this.pythonWorkerProxy.isFunctionEnabled() && serverStartAttempts > 0) {
-      try {
-        Thread.sleep(5000L);
-        LOG.debug("Waiting for Python Worker Registration");
-        --serverStartAttempts;
-      } catch (InterruptedException ex) {
-        LOG.error("Python Callback server failed to launch to due: {}" + ex.getMessage());
-      }
-    }
-    if (!pythonWorkerProxy.isWorkerRegistered()) {
-      this.server.shutdown();
-      throw new RuntimeException("Failed to launch Call Back Server");
-    }
-
-    // Transferring serialized function to Python Worker.
-    if (this.pythonWorkerProxy.isWorkerRegistered()) {
-      this.pythonWorkerProxy.setFunction(this.operationType.getType());
-    }
+   server.setup();
 
   }
 
@@ -158,123 +98,18 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
     }
   }
 
-  public static class PythonGatewayServerListenser implements GatewayServerListener
+
+  public PythonServer getServer()
   {
+    return server;
+  }
 
-    private GatewayServer server = null;
-    private Process pyProcess = null;
-    private boolean pythonServerStarted = false;
-    private OpType operationType = OpType.MAP;
-    private static final Logger LOG = LoggerFactory.getLogger(PythonGatewayServerListenser.class);
-    private PythonWorkerContext context = null;
-
-    public boolean isPythonServerStarted()
-    {
-      return this.pythonServerStarted;
-    }
-
-    public PythonGatewayServerListenser(GatewayServer startedServer, PythonWorkerContext context)
-    {
-      this.server = startedServer;
-      this.context = context;
-    }
-
-    public void connectionError(Exception e)
-    {
-      LOG.debug("Python Connection error : {}", e.getMessage());
-
-    }
-
-    @Override
-    public void connectionStarted(Py4JServerConnection py4JServerConnection)
-    {
-
-    }
-
-    @Override
-    public void connectionStopped(Py4JServerConnection py4JServerConnection)
-    {
-
-    }
-
-    public void connectionStarted(GatewayConnection gatewayConnection)
-    {
-      LOG.debug("Python Connection started: {}", gatewayConnection.getSocket().getPort());
-
-    }
-
-    public void connectionStopped(GatewayConnection gatewayConnection)
-    {
-      LOG.debug("Python Connection stoppped");
-    }
-
-    public void serverError(Exception e)
-    {
-      LOG.debug("Gateway Server error: {}", e.getMessage());
-    }
-
-    public void serverPostShutdown()
-    {
-
-      LOG.debug("Gateway server shut down");
-    }
-
-    public void serverPreShutdown()
-    {
-      LOG.debug("Gateway server shutting down");
-
-      if (this.pyProcess != null) {
-        this.pyProcess.destroy();
-        LOG.debug("Destroyed python worker process");
-      }
-    }
-
-    public void serverStarted()
-    {
-      LOG.debug("Gateway server started: {}", this.server.getPort());
-      this.startPythonWorker(this.server.getPort());
-    }
-
-    public void serverStopped()
-    {
-      LOG.debug("Gateway server stopped");
-      if (this.pyProcess != null) {
-        this.pyProcess.destroy();
-        LOG.debug("Destroyed python worker process");
-      }
-
-    }
-
-    private void startPythonWorker(int gatewayServerPort)
-    {
-      ProcessBuilder pb = new ProcessBuilder(new String[0]);
-      try {
-        LOG.info("Starting python worker process using context: {}", this.context);
-        LOG.info("Worker File Path: {}", this.context.getWorkerFilePath());
-        LOG.info("Python Environment Path: {}", this.context.getPythonEnvPath());
-        Map<String, String> processEnvironment = pb.environment();
-        processEnvironment.put("PYTHONPATH", this.context.getPythonEnvPath());
-        this.pyProcess = pb.command(new String[]{"/usr/bin/python", "-u", this.context.getWorkerFilePath(), "" + gatewayServerPort, operationType.getType()}).start();
-        LoggerUtils.captureProcessStreams(this.pyProcess);
-        this.pythonServerStarted = true;
-        PythonGenericOperator.LOG.info("Python worker started: {}", this.pyProcess);
-      } catch (IOException exception) {
-
-        PythonGenericOperator.LOG.error("Failed to start python server: {}" + exception.getMessage());
-      }
-    }
+  public void setServer(PythonServer server)
+  {
+    this.server = server;
   }
 
   protected abstract void processTuple(T tuple);
 
-  public void setPythonOperatorEnv(Map<String, String> environementData)
-  {
-    this.environementData = environementData;
-    if (pythonWorkerContext == null) {
-      this.pythonWorkerContext = new PythonWorkerContext(this.operationType, serializedFunction, environementData);
-    } else {
-      this.pythonWorkerContext.setEnvironmentData(environementData);
-    }
-  }
 
 }
