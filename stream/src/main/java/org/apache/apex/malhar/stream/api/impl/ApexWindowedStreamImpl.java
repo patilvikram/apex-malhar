@@ -30,7 +30,7 @@ import org.apache.apex.malhar.lib.window.WindowOption;
 import org.apache.apex.malhar.lib.window.WindowState;
 
 import org.apache.apex.malhar.lib.window.accumulation.FoldFn;
-import org.apache.apex.malhar.lib.window.accumulation.ReduceFn;
+import org.apache.apex.malhar.lib.window.accumulation.Reduce;
 import org.apache.apex.malhar.lib.window.accumulation.SumLong;
 import org.apache.apex.malhar.lib.window.accumulation.TopN;
 import org.apache.apex.malhar.lib.window.impl.InMemoryWindowedKeyedStorage;
@@ -62,15 +62,7 @@ public class ApexWindowedStreamImpl<T> extends ApexStreamImpl<T> implements Wind
   protected TriggerOption triggerOption;
 
   protected Duration allowedLateness;
-//
-//  public ApexWindowedStreamImpl( WindowOption windowOption, TriggerOption triggerOption, Duration allowedLateness)
-//  {
-//    super();
-//    this.windowOption = windowOption;
-//    this.triggerOption = triggerOption;
-//    this.allowedLateness = allowedLateness;
-//  }
-//
+
   public ApexWindowedStreamImpl()
   {
   }
@@ -171,7 +163,7 @@ public class ApexWindowedStreamImpl<T> extends ApexStreamImpl<T> implements Wind
 
 
   @Override
-  public <STREAM extends WindowedStream<Tuple.WindowedTuple<T>>> STREAM reduce(ReduceFn<T> reduce, Option... opts)
+  public <STREAM extends WindowedStream<Tuple.WindowedTuple<T>>> STREAM reduce(Reduce<T> reduce, Option... opts)
   {
     WindowedStream<Tuple<T>> innerstream = map(new ConvertFn<T>());
     WindowedOperatorImpl<T, T, T> windowedOperator = createWindowedOperator(reduce);
@@ -180,7 +172,7 @@ public class ApexWindowedStreamImpl<T> extends ApexStreamImpl<T> implements Wind
   }
 
   @Override
-  public <K, V, STREAM extends WindowedStream<Tuple.WindowedTuple<KeyValPair<K, V>>>> STREAM reduceByKey(ReduceFn<V> reduce, Function.ToKeyValue<T, K, V> convertToKeyVal, Option... opts)
+  public <K, V, STREAM extends WindowedStream<Tuple.WindowedTuple<KeyValPair<K, V>>>> STREAM reduceByKey(Reduce<V> reduce, Function.ToKeyValue<T, K, V> convertToKeyVal, Option... opts)
   {
     WindowedStream<Tuple<KeyValPair<K, V>>> kvstream = map(convertToKeyVal);
     KeyedWindowedOperatorImpl<K, V, V, V> keyedWindowedOperator = createKeyedWindowedOperator(reduce);

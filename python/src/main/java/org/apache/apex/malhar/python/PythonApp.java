@@ -38,7 +38,7 @@ import org.apache.apex.malhar.lib.window.Tuple;
 import org.apache.apex.malhar.lib.window.WindowOption;
 
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
-import org.apache.apex.malhar.python.operator.interfaces.PythonAccumulator;
+import org.apache.apex.malhar.python.operator.interfaces.PythonReduceProxy;
 import org.apache.apex.malhar.python.runtime.PythonApexStreamImpl;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
@@ -343,11 +343,13 @@ public class PythonApp implements StreamingApplication
     return this;
   }
 
-  public PythonApp reduce(String name, byte[] searializedFunction)
+  public PythonApp reduce(String name, byte[] serializedObject)
   {
 
     if (apexStream instanceof PythonApexStreamImpl) {
-      apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).accumulate(new PythonAccumulator(searializedFunction), Option.Options.name(name));
+      PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE, serializedObject);
+
+      apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).reduce(reduceProxy, Option.Options.name(name));
     }
     return this;
   }

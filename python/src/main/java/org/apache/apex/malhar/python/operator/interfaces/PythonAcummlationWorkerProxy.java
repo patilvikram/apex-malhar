@@ -32,44 +32,17 @@ import py4j.Py4JException;
 public class PythonAcummlationWorkerProxy<T> extends PythonWorkerProxy<T> implements Accumulation<T,T,T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonAcummlationWorkerProxy.class);
-  private PythonAccumulatorWorker<T> registerdPythonWorker = null;
-  private boolean functionEnabled = false;
-  private byte[]  serializedObject = null;
-  private boolean workerRegistered = false;
+
+  public PythonAcummlationWorkerProxy()
+  {
+    super();
+
+  }
 
   public PythonAcummlationWorkerProxy(byte[] serializedFunc)
   {
     super(serializedFunc);
-    this.serializedObject = serializedFunc;
-  }
-
-
-  public void register(PythonAccumulatorWorker pythonWorker)
-  {
-    LOG.debug("Registering python worker now");
-    this.registerdPythonWorker = pythonWorker;
-    this.workerRegistered = true;
-    LOG.debug("Python worker registered");
-  }
-
-  public void setObject(String opType)
-  {
-    if (this.isWorkerRegistered() && !isFunctionEnabled()) {
-      LOG.debug("Setting Serialized function");
-      this.registerdPythonWorker.setObject(this.serializedObject, opType);
-      this.functionEnabled = true;
-      LOG.debug("Set Serialized function");
-    }
-  }
-
-  public boolean isWorkerRegistered()
-  {
-    return this.workerRegistered;
-  }
-
-  public boolean isFunctionEnabled()
-  {
-    return this.functionEnabled;
+    this.serializedData = serializedFunc;
   }
 
   @Override
@@ -81,12 +54,12 @@ public class PythonAcummlationWorkerProxy<T> extends PythonWorkerProxy<T> implem
   @Override
   public T accumulate(T accumulatedValue, T input)
   {
-    if (registerdPythonWorker != null) {
+    if (getWorker() != null) {
 
       T result = null;
       LOG.trace("Processing accumulation: {}", input);
       try {
-        result = registerdPythonWorker.accumulate(accumulatedValue, input);
+        result = (T) ((PythonAccumulatorWorker)getWorker()).accumulate(accumulatedValue, input);
         LOG.trace("Processed accumulation: {}", result);
         return result;
       } catch (Py4JException ex) {
@@ -102,12 +75,12 @@ public class PythonAcummlationWorkerProxy<T> extends PythonWorkerProxy<T> implem
   @Override
   public T merge(T accumulatedValue1, T accumulatedValue2)
   {
-    if (registerdPythonWorker != null) {
+    if (getWorker() != null) {
 
       T result = null;
       LOG.trace("Processing accumulation: {} {}", accumulatedValue1, accumulatedValue2);
       try {
-        result = registerdPythonWorker.merge(accumulatedValue1, accumulatedValue2);
+        result = (T) ((PythonAccumulatorWorker)getWorker()).merge(accumulatedValue1, accumulatedValue2);
         LOG.trace("Processed accumulation: {}", result);
         return result;
       } catch (Py4JException ex) {

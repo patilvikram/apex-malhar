@@ -37,39 +37,6 @@ gateway = None
 
 
 
-class AbstractAccumulatorPythonWorker(object):
-  __metaclass__ = ABCMeta
-
-
-  @abstractmethod
-  def setObject(self, obj, opType):
-    pass
-
-  @abstractmethod
-  def defaultAccumulatedValue(self):
-    pass
-
-
-  @abstractmethod
-  def getOutput(accumulated):
-    pass
-
-
-  @abstractmethod
-  def getRetraction(output):
-    pass
-
-  @abstractmethod
-  def accumulate(self, accumulated, input):
-    pass
-
-  @abstractmethod
-  def merge(self, input1, input2):
-    pass
-
-  class Java:
-    implements = ["org.apache.apex.malhar.python.operator.interfaces.PythonAccumulator"]
-
 
 
 
@@ -91,32 +58,6 @@ class AbstractPythonWorker(object):
   class Java:
     implements = ["org.apache.apex.malhar.python.runtime.PythonWorker"]
 
-class AccumulatorWorkerImpl(AbstractAccumulatorPythonWorker):
-
-  accum_obj = None
-  opType = None
-  counter = 0;
-
-  def __init__(self, gateway, opType):
-    self.gateway = gateway
-    self.opType = opType
-
-  @abstractmethod
-  def setObject(self, obj, opType):
-    try:
-      import os, imp
-      import cloudpickle
-      self.accum_obj = cloudpickle.loads(obj)
-      self.opType = opType
-    except ValueError as e:
-      print str(e)
-      from traceback import print_exc
-      print_exc()
-    except Exception:
-      from traceback import print_exc
-      print_exc()
-    return "RETURN VALUE"
-
 
 class WorkerImpl(AbstractPythonWorker):
   serialized_f = None
@@ -132,8 +73,8 @@ class WorkerImpl(AbstractPythonWorker):
   def setFunction(self, f, opType):
     try:
       import os, imp
-      import cloudpickle
-      self.callable_f = cloudpickle.loads(f)
+      import dill
+      self.callable_f = dill.loads(f)
       self.opType = opType
     except ValueError as e:
       print str(e)
@@ -154,8 +95,7 @@ class WorkerImpl(AbstractPythonWorker):
     if type == "MAP": return MapWorkerImpl(gateway, type)
     if type == "FLATMAP": return FlatMapWorkerImpl(gateway, type)
     if type == "FILTER": return FilterWorkerImpl(gateway, type)
-    if type == "REDUCE": return ReduceWorkerImpl(gateway, type)
-    assert 0, "Bad shape creation: " + type
+    # assert 0, "Bad shape creation: " + type
 
   factory = staticmethod(factory)
 
@@ -208,35 +148,6 @@ class FilterWorkerImpl(WorkerImpl):
       print_exc()
     return None
 
-class ReduceWorkerImpl(AccumulatorWorkerImpl):
-
-  def accumulate(self, accumulated, input):
-    try:
-      result = self.accum_obj.accumulate( accumulated, input)
-      return result
-    except ValueError as e:
-      print str(e)
-      from traceback import print_exc
-      print_exc()
-    except Exception:
-      from traceback import print_exc
-      print_exc()
-    return None
-
-  def merge(self, input1, input2):
-    try:
-      result = self.accum_obj.merge(input1,input2)
-      return result
-    except ValueError as e:
-      print str(e)
-      from traceback import print_exc
-      print_exc()
-    except Exception:
-      from traceback import print_exc
-      print_exc()
-    return None
-
-  
 
 # TODO this may cause race condition
 def find_free_port():
@@ -276,8 +187,17 @@ def main(argv):
 
   # Instantiate WorkerImpl for PythonWorker java interface and regsiter with PythonWorkerProxy in Java.
   workerImpl = WorkerImpl.factory(gateway, argv[1])
-  gateway.entry_point.register(workerImpl)
-  print "Python process started with type" + argv[1]
+  if argv[1] == 'REDUCE':
+    # print gateway.entry_point.getSerializedData()
+    serialized_object =  gateway.entry_point.getSerializedData()
+    import dill
+    workerImpl=dill.loads(serialized_object)
+    print type(workerImpl)
+    gateway.entry_point.register(workerImpl)
+  else:
+    gateway.entry_point.register(workerImpl)
+
+  print "Python process started with type: " + argv[1]
 
 
 if __name__ == "__main__":

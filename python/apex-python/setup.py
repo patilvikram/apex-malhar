@@ -18,6 +18,7 @@ setup(
     packages=['pyapex','pyapex.runtime'],
     package_dir={"": "src"},
     long_description=read('README'),
+    python_requires='~=2.7',
     classifiers=[
         "Development Status :: 1 - Beta",
         "Topic :: Python Support",

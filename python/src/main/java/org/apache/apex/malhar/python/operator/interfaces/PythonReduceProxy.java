@@ -1,17 +1,46 @@
 package org.apache.apex.malhar.python.operator.interfaces;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.apex.malhar.PythonConstants;
+import org.apache.apex.malhar.lib.window.accumulation.Reduce;
 import org.apache.apex.malhar.python.runtime.PythonAccumulatorWorker;
 
-/**
- * Created by vikram on 27/6/17.
- */
+
 public class PythonReduceProxy<T> extends PythonAcummlationWorkerProxy<T> implements Reduce<T>
 {
-  public PythonReduceProxy(byte[] serializedFunc)
+  private static final Logger LOG = LoggerFactory.getLogger(PythonReduceProxy.class);
+
+  public PythonReduceProxy()
   {
-    super(serializedFunc);
+    super();
   }
 
+  public PythonReduceProxy(PythonConstants.OpType operationType, byte[] serializedFunc)
+  {
+    super(serializedFunc);
+    this.operationType = operationType;
+  }
+
+  @Override
+  public T defaultAccumulatedValue()
+  {
+    return null;
+  }
+
+  @Override
+  public T getOutput(T accumulatedValue)
+  {
+    return accumulatedValue;
+  }
+
+
+  @Override
+  public T getRetraction(T value)
+  {
+    return null;
+  }
 
   @Override
   public T accumulate(T accumulatedValue, T input)
@@ -31,6 +60,10 @@ public class PythonReduceProxy<T> extends PythonAcummlationWorkerProxy<T> implem
   @Override
   public T reduce(T input1, T input2)
   {
-    return (T)((PythonAccumulatorWorker)getWorker()).accumulate(input1,input2);
+    LOG.debug("Input received {} {} ", input1,input2);
+
+   T result= (T)((PythonAccumulatorWorker)getWorker()).merge(input1,input2);
+    LOG.debug("Output received {}", result );
+   return result;
   }
 }

@@ -11,7 +11,6 @@ import org.apache.apex.malhar.PythonConstants;
 import org.apache.apex.malhar.python.util.LoggerUtils;
 import org.apache.apex.malhar.python.util.NetworkUtils;
 
-
 import py4j.GatewayConnection;
 import py4j.GatewayServer;
 import py4j.GatewayServerListener;
@@ -26,15 +25,16 @@ public class PythonServer
 
   private PythonWorkerContext pythonWorkerContext = null;
 
-
   private PythonWorkerProxy proxy = null;
   protected Map<String, String> environementData = new HashMap<String, String>();
   protected transient GatewayServer gatewayServer = null;
   protected transient PythonGatewayServerListenser py4jListener = null;
+
   //
   private PythonConstants.OpType operationType = null;
 
-  public PythonServer(){
+  public PythonServer()
+  {
 
   }
 
@@ -54,8 +54,9 @@ public class PythonServer
     // Setting up context path explicitly for handling local as well Hadoop Based Application Development
     this.pythonWorkerContext.setup();
 
-    proxy = new PythonWorkerProxy<>(this.serializedFunction);
-
+    if (proxy == null) {
+      proxy = new PythonWorkerProxy<>(this.serializedFunction);
+    }
     // Instantiating Py4j Gateway Server for Python Worker Process connect back
     boolean gatewayServerLaunchSuccess = false;
     int serverStartAttempts = 5;
@@ -63,6 +64,7 @@ public class PythonServer
       try {
         this.gatewayServer = new GatewayServer(proxy, NetworkUtils.findAvaliablePort());
         this.py4jListener = new PythonGatewayServerListenser(this.gatewayServer, this.pythonWorkerContext);
+        this.py4jListener.setOperationType(this.operationType);
         this.gatewayServer.addListener(this.py4jListener);
         this.gatewayServer.start(true);
         gatewayServerLaunchSuccess = true;
@@ -95,9 +97,12 @@ public class PythonServer
     }
 
     // Transferring serialized function to Python Worker.
-    LOG.debug("Checking if worker is registered {} {} " , proxy.isWorkerRegistered(), this.operationType);
+    LOG.debug("Checking if worker is registered {} {} ", proxy.isWorkerRegistered(), this.operationType);
     if (proxy.isWorkerRegistered()) {
-      proxy.setSerializedData(this.operationType.getType());
+      if( this.operationType != PythonConstants.OpType.REDUCE) {
+        LOG.debug("Setting serialized function back ");
+        proxy.setSerializedData(this.operationType.getType());
+      }
     }
     return true;
   }
@@ -123,7 +128,8 @@ public class PythonServer
     private GatewayServer server = null;
     private Process pyProcess = null;
     private boolean pythonServerStarted = false;
-    private PythonConstants.OpType operationType = PythonConstants.OpType.MAP;
+
+    private PythonConstants.OpType operationType = null;
     private static final Logger LOG = LoggerFactory.getLogger(PythonGatewayServerListenser.class);
     private PythonWorkerContext context = null;
 
@@ -216,11 +222,21 @@ public class PythonServer
         this.pyProcess = pb.command(new java.lang.String[]{"/usr/bin/python", "-u", this.context.getWorkerFilePath(), "" + gatewayServerPort, operationType.getType()}).start();
         LoggerUtils.captureProcessStreams(this.pyProcess);
         this.pythonServerStarted = true;
-        LOG.info("Python worker started: {}", this.pyProcess);
+        LOG.info("Python worker started: {} {} ", this.pyProcess, this.operationType);
       } catch (IOException exception) {
 
         LOG.error("Failed to start python server: {}" + exception.getMessage());
       }
+    }
+
+    public PythonConstants.OpType getOperationType()
+    {
+      return operationType;
+    }
+
+    public void setOperationType(PythonConstants.OpType operationType)
+    {
+      this.operationType = operationType;
     }
 
   }
@@ -233,6 +249,16 @@ public class PythonServer
   public void setProxy(PythonWorkerProxy proxy)
   {
     this.proxy = proxy;
+  }
+
+  public PythonConstants.OpType getOperationType()
+  {
+    return operationType;
+  }
+
+  public void setOperationType(PythonConstants.OpType operationType)
+  {
+    this.operationType = operationType;
   }
 
 }

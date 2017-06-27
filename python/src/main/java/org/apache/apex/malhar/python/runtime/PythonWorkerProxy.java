@@ -18,20 +18,27 @@
  */
 package org.apache.apex.malhar.python.runtime;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.apex.malhar.PythonConstants;
+
 import py4j.Py4JException;
 
 public class PythonWorkerProxy<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonWorkerProxy.class);
 
+  protected PythonWorker worker = null;
+  protected PythonConstants.OpType operationType;
+  protected boolean functionEnabled = false;
+  protected byte[] serializedData = null;
+  protected boolean workerRegistered = false;
 
-  private PythonWorker worker = null;
-  private boolean functionEnabled = false;
-  private byte[] serializedData = null;
-  private boolean workerRegistered = false;
+  public PythonWorkerProxy()
+  {
+    this.serializedData = null;
+  }
 
   public PythonWorkerProxy(byte[] serializedFunc)
   {
@@ -60,7 +67,11 @@ public class PythonWorkerProxy<T>
 
   public void register(PythonWorker pythonWorker)
   {
-    LOG.debug("Registering python worker now");
+    if(pythonWorker == null ){
+      throw new RuntimeException("Null Python Worker");
+    }
+    LOG.debug("Current proxy instance {}", this);
+    LOG.debug("Registering python worker now {} {}",(pythonWorker != null),( pythonWorker instanceof PythonAccumulatorWorker));
     this.worker = pythonWorker;
     this.workerRegistered = true;
     LOG.debug("Python worker registered");
@@ -76,9 +87,9 @@ public class PythonWorkerProxy<T>
     }
   }
 
-  public byte[] getSerializedData(String opType)
+  public byte[] getSerializedData()
   {
-   return serializedData;
+    return serializedData;
   }
 
   public PythonWorker getWorker()
@@ -86,6 +97,15 @@ public class PythonWorkerProxy<T>
     return worker;
   }
 
+  public PythonConstants.OpType getOperationType()
+  {
+    return operationType;
+  }
+
+  public void setOperationType(PythonConstants.OpType operationType)
+  {
+    this.operationType = operationType;
+  }
 
   public boolean isWorkerRegistered()
   {

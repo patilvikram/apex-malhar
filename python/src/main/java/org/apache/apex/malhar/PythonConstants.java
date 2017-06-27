@@ -10,7 +10,9 @@ public class PythonConstants
   {
     MAP("MAP"),
     FLAT_MAP("FLAT_MAP"),
-    FILTER("FILTER");
+    FILTER("FILTER"),
+    REDUCE("REDUCE"),
+    REDUCE_BY_KEY("REDUCE_BY_KEY");
 
     private String operationName = null;
 

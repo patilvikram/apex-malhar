@@ -19,7 +19,7 @@
 
 import types
 
-import cloudpickle
+import dill
 from tempfile import TemporaryFile, NamedTemporaryFile
 from uuid import uuid1
 from py4j.protocol import Py4JJavaError
@@ -149,7 +149,7 @@ class ApexStreamingApp():
 
   def reduce(self,name, reduceFn):
     serialized_func = self.serialize_function(name, reduceFn)
-    self.java_streaming_app = self.java_streaming_app.reduce(name,reduceFn)
+    self.java_streaming_app = self.java_streaming_app.reduce(name,serialized_func)
     return self
 
 
@@ -171,5 +171,5 @@ class ApexStreamingApp():
 
   def serialize_function(self, name, func):
     serialized_func = bytearray()
-    serialized_func.extend(cloudpickle.dumps(func))
+    serialized_func.extend(dill.dumps(func))
     return serialized_func

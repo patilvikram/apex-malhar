@@ -15,7 +15,6 @@ import org.apache.apex.malhar.python.operator.PythonFlatMapOperator;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 import org.apache.apex.malhar.python.operator.PythonMapOperator;
 import org.apache.apex.malhar.python.operator.PythonWindowedOperator;
-import org.apache.apex.malhar.python.operator.interfaces.PythonAccumulator;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.PythonApexStream;
@@ -49,11 +48,6 @@ public class PythonApexStreamImpl<T> extends ApexWindowedStreamImpl<T> implement
     this.graph = apexStream.getGraph();
 
   }
-//  public PythonApexStreamImpl(PythonApexStreamImpl apexStream)
-//  {
-//      super(apexStream);
-//  }
-
 
   @Override
   public PythonApexStream<T> map(byte[] serializedFunction, Option... opts)
@@ -128,7 +122,7 @@ public class PythonApexStreamImpl<T> extends ApexWindowedStreamImpl<T> implement
   protected <IN, ACCU, OUT> WindowedOperatorImpl<IN, ACCU, OUT> createWindowedOperator(Accumulation<? super IN, ACCU, OUT> accumulationFn)
   {
 
-    PythonWindowedOperator windowedOperator = new PythonWindowedOperator(((PythonAccumulator)accumulationFn).getSerialiedData());
+    PythonWindowedOperator windowedOperator = new PythonWindowedOperator(((PythonWorkerProxy)accumulationFn).getSerializedData());
     //TODO use other default setting in the future
     windowedOperator.setDataStorage(new InMemoryWindowedStorage<ACCU>());
     windowedOperator.setRetractionStorage(new InMemoryWindowedStorage<OUT>());

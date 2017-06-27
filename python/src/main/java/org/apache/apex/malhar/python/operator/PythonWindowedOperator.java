@@ -29,17 +29,14 @@ public class PythonWindowedOperator<T> extends WindowedOperatorImpl
 
   private static final Logger LOG = LoggerFactory.getLogger(PythonWindowedOperator.class);
   private PythonServer server = null;
-
-//  protected transient GatewayServer server = null;
-//  protected transient PythonGenericOperator.PythonGatewayServerListenser py4jListener = null;
-//  protected transient PythonWorkerProxy<T> pythonWorkerProxy = null;
   protected byte[] serializedFunction = null;
   protected transient PythonConstants.OpType operationType = null;
-//  private PythonWorkerContext pythonWorkerContext = null;
-//  protected Map<java.lang.String, java.lang.String> environementData = new HashMap<java.lang.String, java.lang.String>();
 
 
-
+  public PythonWindowedOperator()
+  {
+    this.serializedFunction = null;
+  }
   public PythonWindowedOperator(byte[] serializedFunc)
   {
     this.serializedFunction = serializedFunc;
@@ -49,6 +46,8 @@ public class PythonWindowedOperator<T> extends WindowedOperatorImpl
   public void setup(Context.OperatorContext context)
   {
     super.setup(context);
+    server.setOperationType(((PythonWorkerProxy)this.accumulation).getOperationType());
+    server.setProxy((PythonWorkerProxy)this.accumulation);
     server.setup();
   }
 
@@ -58,6 +57,5 @@ public class PythonWindowedOperator<T> extends WindowedOperatorImpl
       server.shutdown();
     }
   }
-
 
 }
