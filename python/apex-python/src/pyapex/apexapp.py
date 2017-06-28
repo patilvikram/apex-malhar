@@ -141,17 +141,19 @@ class ApexStreamingApp():
     self.java_streaming_app = self.java_streaming_app.count(name)
     return self
 
-
   def countByKey(self,name="counter"):
     self.java_streaming_app = self.java_streaming_app.countByKey(name)
     return self
-
 
   def reduce(self,name, reduceFn):
     serialized_func = self.serialize_function(name, reduceFn)
     self.java_streaming_app = self.java_streaming_app.reduce(name,serialized_func)
     return self
 
+  def reduceByKey(self,name, reduceFn):
+    serialized_func = self.serialize_function(name, reduceFn)
+    self.java_streaming_app = self.java_streaming_app.reduceByKey(name,serialized_func)
+    return self
 
   def launch(self, local_mode=False):
     try:

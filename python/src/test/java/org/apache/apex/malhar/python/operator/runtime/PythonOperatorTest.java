@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.PythonConstants;
-import org.apache.apex.malhar.python.operator.PythonMapOperator;
+import org.apache.apex.malhar.python.operator.transform.PythonMapOperator;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.commons.codec.binary.Base64;
 

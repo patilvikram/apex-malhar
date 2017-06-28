@@ -31,8 +31,8 @@ class AbstractAccumulatorPythonWorker(object):
   def merge(self, input1, input2):
     pass
 
-  class Java:
-    implements = ["org.apache.apex.malhar.python.runtime.PythonAccumulatorWorker"]
+  # class Java:
+  #   implements = ["org.apache.apex.malhar.python.runtime.PythonAccumulatorWorker"]
 
 
 class AccumulatorWorkerImpl(AbstractAccumulatorPythonWorker):
@@ -69,13 +69,10 @@ class AccumulatorWorkerImpl(AbstractAccumulatorPythonWorker):
 class ReduceFunction(AbstractAccumulatorPythonWorker):
 
   def accumulate( self, accumulated, data ):
-    if accumulated == None:
-      return data
     return self.reduce(accumulated, data)
 
 
   def merge( self, input1, input2 ):
-    print input1, input2
     return self.reduce(input1, input2)
 
   @abstractmethod
@@ -93,3 +90,6 @@ class ReduceFunction(AbstractAccumulatorPythonWorker):
 
   def setObject( self, obj, opType ):
     pass
+
+  class Java:
+    implements = ["org.apache.apex.malhar.python.operator.interfaces.PythonReduceWorker"]

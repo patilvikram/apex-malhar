@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.PythonConstants;
+import org.apache.apex.malhar.python.operator.proxy.PythonAcummlationWorkerProxy;
+import org.apache.apex.malhar.python.operator.proxy.PythonWorkerProxy;
 import org.apache.apex.malhar.python.util.LoggerUtils;
 import org.apache.apex.malhar.python.util.NetworkUtils;
 
@@ -98,11 +100,9 @@ public class PythonServer
 
     // Transferring serialized function to Python Worker.
     LOG.debug("Checking if worker is registered {} {} ", proxy.isWorkerRegistered(), this.operationType);
-    if (proxy.isWorkerRegistered()) {
-      if( this.operationType != PythonConstants.OpType.REDUCE) {
+    if (proxy.isWorkerRegistered() && ! (proxy instanceof PythonAcummlationWorkerProxy)) {
         LOG.debug("Setting serialized function back ");
         proxy.setSerializedData(this.operationType.getType());
-      }
     }
     return true;
   }

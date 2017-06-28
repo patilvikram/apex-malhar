@@ -1,12 +1,11 @@
-package org.apache.apex.malhar.python.operator.interfaces;
+package org.apache.apex.malhar.python.operator.proxy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.PythonConstants;
 import org.apache.apex.malhar.lib.window.accumulation.Reduce;
-import org.apache.apex.malhar.python.runtime.PythonAccumulatorWorker;
-
+import org.apache.apex.malhar.python.operator.interfaces.PythonReduceWorker;
 
 public class PythonReduceProxy<T> extends PythonAcummlationWorkerProxy<T> implements Reduce<T>
 {
@@ -62,7 +61,7 @@ public class PythonReduceProxy<T> extends PythonAcummlationWorkerProxy<T> implem
   {
     LOG.debug("Input received {} {} ", input1,input2);
 
-   T result= (T)((PythonAccumulatorWorker)getWorker()).merge(input1,input2);
+   T result= (T)((PythonReduceWorker)getWorker()).reduce(input1,input2);
     LOG.debug("Output received {}", result );
    return result;
   }

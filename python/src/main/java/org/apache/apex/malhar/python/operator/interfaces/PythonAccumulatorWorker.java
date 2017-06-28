@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.python.runtime;
+package org.apache.apex.malhar.python.operator.interfaces;
 
 import java.util.Map;
-
-import org.apache.apex.malhar.lib.window.Accumulation;
 
 public interface PythonAccumulatorWorker<T> extends PythonWorker<T>
 {

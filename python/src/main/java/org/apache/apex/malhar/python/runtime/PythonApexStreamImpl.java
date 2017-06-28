@@ -8,13 +8,17 @@ import org.apache.apex.malhar.lib.window.Accumulation;
 import org.apache.apex.malhar.lib.window.TriggerOption;
 import org.apache.apex.malhar.lib.window.WindowOption;
 import org.apache.apex.malhar.lib.window.WindowState;
+import org.apache.apex.malhar.lib.window.impl.InMemoryWindowedKeyedStorage;
 import org.apache.apex.malhar.lib.window.impl.InMemoryWindowedStorage;
+import org.apache.apex.malhar.lib.window.impl.KeyedWindowedOperatorImpl;
 import org.apache.apex.malhar.lib.window.impl.WindowedOperatorImpl;
-import org.apache.apex.malhar.python.operator.PythonFilterOperator;
-import org.apache.apex.malhar.python.operator.PythonFlatMapOperator;
+import org.apache.apex.malhar.python.operator.transform.PythonFilterOperator;
+import org.apache.apex.malhar.python.operator.transform.PythonFlatMapOperator;
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
-import org.apache.apex.malhar.python.operator.PythonMapOperator;
+import org.apache.apex.malhar.python.operator.PythonKeyedWindowedOperator;
+import org.apache.apex.malhar.python.operator.transform.PythonMapOperator;
 import org.apache.apex.malhar.python.operator.PythonWindowedOperator;
+import org.apache.apex.malhar.python.operator.proxy.PythonWorkerProxy;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.PythonApexStream;
@@ -140,6 +144,27 @@ public class PythonApexStreamImpl<T> extends ApexWindowedStreamImpl<T> implement
     return windowedOperator;
   }
 
+  protected <K, V, ACCU, OUT> KeyedWindowedOperatorImpl<K, V, ACCU, OUT> createKeyedWindowedOperator(Accumulation<? super V, ACCU, OUT> accumulationFn)
+  {
+    KeyedWindowedOperatorImpl<K, V, ACCU, OUT> keyedWindowedOperator = new PythonKeyedWindowedOperator(((PythonWorkerProxy)accumulationFn).getSerializedData());
+
+    //TODO use other default setting in the future
+    keyedWindowedOperator.setDataStorage(new InMemoryWindowedKeyedStorage<K, ACCU>());
+    keyedWindowedOperator.setRetractionStorage(new InMemoryWindowedKeyedStorage<K, OUT>());
+    keyedWindowedOperator.setWindowStateStorage(new InMemoryWindowedStorage<WindowState>());
+    if (windowOption != null) {
+      keyedWindowedOperator.setWindowOption(windowOption);
+    }
+    if (triggerOption != null) {
+      keyedWindowedOperator.setTriggerOption(triggerOption);
+    }
+    if (allowedLateness != null) {
+      keyedWindowedOperator.setAllowedLateness(allowedLateness);
+    }
+
+    keyedWindowedOperator.setAccumulation(accumulationFn);
+    return keyedWindowedOperator;
+  }
 
 
 }

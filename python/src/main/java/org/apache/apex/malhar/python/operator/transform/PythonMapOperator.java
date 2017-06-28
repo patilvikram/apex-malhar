@@ -16,45 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.python.operator;
+package org.apache.apex.malhar.python.operator.transform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.PythonConstants;
+import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 
-import com.datatorrent.api.DefaultOutputPort;
-
-public class PythonFilterOperator<T> extends PythonGenericOperator<T>
+public class PythonMapOperator<T> extends PythonGenericOperator<T>
 {
-  private static final Logger LOG = LoggerFactory.getLogger(PythonFilterOperator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PythonMapOperator.class);
 
-  DefaultOutputPort<T> falsePort = new DefaultOutputPort<>();
-  DefaultOutputPort<T> truePort = new DefaultOutputPort<T>();
 
-  public PythonFilterOperator()
+  public PythonMapOperator()
   {
-    this(null);
+
+   this(null);
   }
 
-  public PythonFilterOperator(byte[] serializedFunc)
+  public PythonMapOperator(byte[] serializedFunc)
   {
+    super(PythonConstants.OpType.MAP, serializedFunc);
 
-    super(PythonConstants.OpType.FILTER, serializedFunc);
   }
 
   @Override
   protected void processTuple(T tuple)
   {
-    LOG.trace("Received Tuple: {}", tuple);
-    Object result = getServer().getProxy().execute(tuple);
-    if (result instanceof Boolean) {
-      Boolean b = (Boolean)result;
-      LOG.trace("Filter response received: {}" + b);
-      if (b.booleanValue()) {
-        out.emit(tuple);
-      }
-    }
 
+    LOG.trace("Received Tuple: {} ", tuple);
+    Object result = getServer().getProxy().execute(tuple);
+    if (result != null) {
+      LOG.trace("Response received: {} ", result);
+      out.emit((T)result);
+    }
   }
 }

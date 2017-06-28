@@ -36,10 +36,6 @@ from abc import ABCMeta, abstractmethod
 gateway = None
 
 
-
-
-
-
 class AbstractPythonWorker(object):
   __metaclass__ = ABCMeta
 
@@ -56,7 +52,7 @@ class AbstractPythonWorker(object):
     pass
 
   class Java:
-    implements = ["org.apache.apex.malhar.python.runtime.PythonWorker"]
+    implements = ["org.apache.apex.malhar.python.operator.interfaces.PythonWorker"]
 
 
 class WorkerImpl(AbstractPythonWorker):
@@ -187,7 +183,7 @@ def main(argv):
 
   # Instantiate WorkerImpl for PythonWorker java interface and regsiter with PythonWorkerProxy in Java.
   workerImpl = WorkerImpl.factory(gateway, argv[1])
-  if argv[1] == 'REDUCE':
+  if argv[1] in ['REDUCE','REDUCE_BY_KEY']:
     # print gateway.entry_point.getSerializedData()
     serialized_object =  gateway.entry_point.getSerializedData()
     import dill

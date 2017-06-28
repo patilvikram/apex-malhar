@@ -38,7 +38,7 @@ import org.apache.apex.malhar.lib.window.Tuple;
 import org.apache.apex.malhar.lib.window.WindowOption;
 
 import org.apache.apex.malhar.python.operator.PythonGenericOperator;
-import org.apache.apex.malhar.python.operator.interfaces.PythonReduceProxy;
+import org.apache.apex.malhar.python.operator.proxy.PythonReduceProxy;
 import org.apache.apex.malhar.python.runtime.PythonApexStreamImpl;
 import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
@@ -49,7 +49,6 @@ import org.apache.apex.malhar.stream.api.impl.ApexStreamImpl;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.Options;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import com.datatorrent.api.DAG;
@@ -207,7 +206,7 @@ public class PythonApp implements StreamingApplication
 
     Map<String, String> pythonOperatorEnv = new HashMap<>();
     if (local) {
-      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_WORKER_PATH, this.getApexDirectoryPath() + "/runtime/"+PythonConstants.PYTHON_WORKER_FILE_NAME);
+      pythonOperatorEnv.put(PythonWorkerContext.PYTHON_WORKER_PATH, this.getApexDirectoryPath() + "/runtime/" + PythonConstants.PYTHON_WORKER_FILE_NAME);
       pythonOperatorEnv.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, this.getApexDirectoryPath() + "/runtime/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
       pythonOperatorEnv.put(PythonWorkerContext.PYTHON_APEX_PATH, this.getApexDirectoryPath() + "/build/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
 
@@ -350,6 +349,26 @@ public class PythonApp implements StreamingApplication
       PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE, serializedObject);
 
       apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).reduce(reduceProxy, Option.Options.name(name));
+    }
+    return this;
+  }
+
+  public PythonApp reduceByKey(String name, byte[] serializedObject)
+  {
+    Function.ToKeyValue<String, String, String> toKeyValueFunction = new Function.ToKeyValue<String, String, String>()
+    {
+      @Override
+      public Tuple<KeyValPair<String, String>> f(String input)
+      {
+        String[] data = input.split(",");
+        return new Tuple.PlainTuple<KeyValPair<String, String>>(new KeyValPair<String, String>(data[0], input));
+      }
+    };
+
+    if (apexStream instanceof PythonApexStreamImpl) {
+      PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE_BY_KEY, serializedObject);
+
+      apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).reduceByKey(reduceProxy, toKeyValueFunction, Option.Options.name(name));
     }
     return this;
   }

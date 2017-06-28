@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.python.operator.interfaces;
+package org.apache.apex.malhar.python.operator.proxy;
 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.lib.window.Accumulation;
-import org.apache.apex.malhar.python.runtime.PythonAccumulatorWorker;
-import org.apache.apex.malhar.python.runtime.PythonWorker;
-import org.apache.apex.malhar.python.runtime.PythonWorkerProxy;
+import org.apache.apex.malhar.python.operator.interfaces.PythonAccumulatorWorker;
 
 import py4j.Py4JException;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.python.operator;
+package org.apache.apex.malhar.python.operator.transform;
 
 import java.util.List;
 
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.apex.malhar.PythonConstants;
+import org.apache.apex.malhar.python.operator.PythonGenericOperator;
 
 public class PythonFlatMapOperator<T> extends PythonGenericOperator<T>
 {

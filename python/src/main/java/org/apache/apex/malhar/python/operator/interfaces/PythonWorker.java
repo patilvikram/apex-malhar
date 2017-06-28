@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.apex.malhar.python.runtime;
+package org.apache.apex.malhar.python.operator.interfaces;
 
 import java.util.Map;
 
