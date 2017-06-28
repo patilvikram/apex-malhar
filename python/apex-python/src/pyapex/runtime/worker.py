@@ -17,14 +17,10 @@
 # under the License.
 #
 
-
-
 '''
 Worker.py file is responsible for instantiating specific workers such as MapWorkerImpl, FlatMapWorkerImpl, FilterWorkerImpl.
 
 Worker.py is ran using python and then we register back WorkerImpl with Java Process for each calls. 
-
-
 '''
 import sys
 import site
@@ -34,7 +30,6 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 gateway = None
-
 
 class AbstractPythonWorker(object):
   __metaclass__ = ABCMeta
@@ -53,7 +48,6 @@ class AbstractPythonWorker(object):
 
   class Java:
     implements = ["org.apache.apex.malhar.python.operator.interfaces.PythonWorker"]
-
 
 class WorkerImpl(AbstractPythonWorker):
   serialized_f = None
@@ -79,7 +73,7 @@ class WorkerImpl(AbstractPythonWorker):
     except Exception:
       from traceback import print_exc
       print_exc()
-    return "RETURN VALUE"
+    return None
 
   def setState(self, dataMap):
     self.dataMap = dataMap
@@ -87,11 +81,9 @@ class WorkerImpl(AbstractPythonWorker):
     return True
 
   def factory(gateway, type):
-    # return eval(type + "()")
     if type == "MAP": return MapWorkerImpl(gateway, type)
     if type == "FLATMAP": return FlatMapWorkerImpl(gateway, type)
     if type == "FILTER": return FilterWorkerImpl(gateway, type)
-    # assert 0, "Bad shape creation: " + type
 
   factory = staticmethod(factory)
 
