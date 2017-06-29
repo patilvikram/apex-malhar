@@ -28,29 +28,34 @@ import org.apache.apex.malhar.python.operator.interfaces.PythonReduceWorker;
 public class PythonReduceProxy<T> extends PythonAcummlationWorkerProxy<T> implements Reduce<T>
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonReduceProxy.class);
-
+  private Class<T> clazz;
   public PythonReduceProxy()
   {
     super();
   }
 
-  public PythonReduceProxy(PythonConstants.OpType operationType, byte[] serializedFunc)
+  public PythonReduceProxy(PythonConstants.OpType operationType, byte[] serializedFunc, Class<T> clazz)
   {
     super(serializedFunc);
     this.operationType = operationType;
+    this.clazz = clazz;
   }
 
   @Override
   public T defaultAccumulatedValue()
   {
-    LOG.debug("defaultAccumulatedValue received " );
-    return null;
+    T generatedDefaultValue = getInstance();
+    LOG.debug("defaultAccumulatedValue received {} "+ generatedDefaultValue);
+    return generatedDefaultValue;
   }
 
   @Override
   public T getOutput(T accumulatedValue)
   {
     LOG.debug("getOutput received {}", accumulatedValue );
+    if( accumulatedValue== null) {
+     accumulatedValue = getInstance();
+    }
     return accumulatedValue;
   }
 
@@ -88,5 +93,16 @@ public class PythonReduceProxy<T> extends PythonAcummlationWorkerProxy<T> implem
     T result= (T)((PythonReduceWorker)getWorker()).reduce(input1,input2);
     LOG.debug("Reduce Output generated {}", result );
     return result;
+  }
+
+  protected T getInstance(){
+    try {
+      return clazz.newInstance();
+    } catch (InstantiationException e) {
+      LOG.error("Failed to instantiate class {} " +clazz.getName());
+    } catch (IllegalAccessException e) {
+      LOG.error("Failed to instantiate class {} " +clazz.getName());
+    }
+    return null;
   }
 }

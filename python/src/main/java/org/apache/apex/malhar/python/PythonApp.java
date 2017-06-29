@@ -334,7 +334,7 @@ public class PythonApp implements StreamingApplication
   {
 
     if (apexStream instanceof PythonApexStreamImpl) {
-      PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE, serializedObject);
+      PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE, serializedObject, String.class);
 
       apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).reduce(reduceProxy, Option.Options.name(name));
     }
@@ -354,7 +354,7 @@ public class PythonApp implements StreamingApplication
     };
 
     if (apexStream instanceof PythonApexStreamImpl) {
-      PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE_BY_KEY, serializedObject);
+      PythonReduceProxy<String> reduceProxy = new PythonReduceProxy<String>(PythonConstants.OpType.REDUCE_BY_KEY, serializedObject, String.class);
 
       apexStream = (PythonApexStream)((PythonApexStreamImpl)apexStream).reduceByKey(reduceProxy, toKeyValueFunction, Option.Options.name(name));
     }
