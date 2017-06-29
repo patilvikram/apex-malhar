@@ -26,6 +26,4 @@ public interface PythonWorker<T>
 
   public Object execute(T tuple);
 
-  public boolean setState(Map map);
-
 }

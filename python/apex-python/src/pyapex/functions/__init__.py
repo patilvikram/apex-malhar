@@ -18,3 +18,4 @@
 #
 
 from .functions import ReduceFunction
+from .transforms import WorkerImpl

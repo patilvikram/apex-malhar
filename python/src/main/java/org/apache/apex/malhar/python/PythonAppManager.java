@@ -38,18 +38,14 @@ public class PythonAppManager
     try {
       if (mode == LaunchMode.LOCAL) {
         appIdentifier = app.runLocal();
-
         return "LocalMode";
       } else {
         StramAppLauncher appLauncher = null;
         appLauncher = new StramAppLauncher(app.getName(), app.getConf());
         appLauncher.loadDependencies();
-
         PythonAppFactory appFactory = new PythonAppFactory(app.getName(), app);
-
         this.appIdentifier = appLauncher.launchApp(appFactory);
         return this.appIdentifier.toString();
-
       }
 
     } catch (Exception e) {

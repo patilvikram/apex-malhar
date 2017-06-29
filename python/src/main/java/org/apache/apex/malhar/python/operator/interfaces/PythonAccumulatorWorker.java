@@ -34,6 +34,4 @@ public interface PythonAccumulatorWorker<T> extends PythonWorker<T>
 
   public T getRetraction(T output);
 
-  public boolean setState(Map map);
-
 }

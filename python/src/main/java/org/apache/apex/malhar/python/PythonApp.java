@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,6 @@ import org.apache.apex.malhar.python.runtime.PythonWorkerContext;
 import org.apache.apex.malhar.stream.api.ApexStream;
 import org.apache.apex.malhar.stream.api.Option;
 import org.apache.apex.malhar.stream.api.PythonApexStream;
-import org.apache.apex.malhar.stream.api.WindowedStream;
 import org.apache.apex.malhar.stream.api.impl.ApexStreamImpl;
 import org.apache.apex.malhar.stream.api.impl.StreamFactory;
 import org.apache.commons.lang.StringUtils;
@@ -243,10 +243,7 @@ public class PythonApp implements StreamingApplication
   {
     ApexStream currentStream = StreamFactory.fromFolder(directoryPath);
     if (currentStream instanceof ApexStreamImpl) {
-//      apexStream = new PythonApexStreamImpl();
       apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
-      //      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
-//      apexStream = (PythonApexStream) pyStream.copyFrom((ApexStreamImpl) currentStream);
     }
     return this;
   }
@@ -255,11 +252,7 @@ public class PythonApp implements StreamingApplication
   {
     ApexStream currentStream = StreamFactory.fromKafka08(zookeepers, topic);
     if (currentStream instanceof ApexStreamImpl) {
-//      apexStream = new PythonApexStreamImpl((ApexStreamImpl)currentStream);
-
       apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
-//      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
-//      apexStream = (PythonApexStream) pyStream.copyFrom((ApexStreamImpl) currentStream);
     }
     return this;
   }
@@ -270,8 +263,6 @@ public class PythonApp implements StreamingApplication
     ApexStream currentStream = StreamFactory.fromData(inputs);
     if (currentStream instanceof ApexStreamImpl) {
       apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
-//      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
-//      apexStream = (PythonApexStream) pyStream.copyFrom((ApexStreamImpl) currentStream);
     }
     return this;
   }
@@ -281,8 +272,6 @@ public class PythonApp implements StreamingApplication
     ApexStream currentStream = StreamFactory.fromKafka09(zookeepers, topic);
     if (currentStream instanceof ApexStreamImpl) {
       apexStream = new PythonApexStreamImpl<String>((ApexStreamImpl<String>)currentStream);
-//      PythonApexStreamImpl pyStream = (( PythonApexStreamImpl )apexStream);
-//    pyStream.copyFrom((ApexStreamImpl)currentStream);
     }
     return this;
   }
@@ -306,11 +295,10 @@ public class PythonApp implements StreamingApplication
     return this;
   }
 
-  public PythonApp window()
+  public PythonApp window(WindowOption windowOption, TriggerOption triggerOption, Duration allowedLateness)
   {
-    apexStream = (PythonApexStream)apexStream.window(new WindowOption.GlobalWindow());
-    ((WindowedStream)apexStream).resetTrigger(new TriggerOption().accumulatingAndRetractingFiredPanes().withEarlyFiringsAtEvery(10));
 
+    apexStream = (PythonApexStream)apexStream.window(windowOption, triggerOption, allowedLateness);
     return this;
   }
 

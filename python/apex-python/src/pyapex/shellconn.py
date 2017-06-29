@@ -17,7 +17,7 @@
 # under the License.
 #
 
-from py4j.java_gateway import JavaGateway
+from py4j.java_gateway import JavaGateway,java_import
 
 
 class ShellConnector(object):
@@ -26,6 +26,8 @@ class ShellConnector(object):
 
   def __init__(self):
     self.gateway = JavaGateway()
+    java_import(self.gateway.jvm, 'org.joda.time.*')
+    java_import(self.gateway.jvm, 'org.apache.apex.malhar.lib.window.*')
 
   def __new__(cls):
     if not hasattr(cls, 'instance'):

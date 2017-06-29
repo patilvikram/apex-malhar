@@ -20,7 +20,6 @@
 import types
 
 import dill
-from tempfile import TemporaryFile, NamedTemporaryFile
 from uuid import uuid1
 from py4j.protocol import Py4JJavaError
 from shellconn import ShellConnector
@@ -133,8 +132,41 @@ class ApexStreamingApp():
     self.java_streaming_app = self.java_streaming_app.filter(name, serialized_func)
     return self
 
-  def window(self, ):
-    self.java_streaming_app = self.java_streaming_app.window()
+  def window(self,*args,**kwargs):
+    _jwindow = None
+    _jtrigger = None
+    gateway=self.shell_connector.get_jvm_gateway()
+    if 'window' not in kwargs or kwargs['window'] == 'GLOBAL':
+      _jwindow=gateway.jvm.WindowOption.GlobalWindow()
+    elif kwargs['window'] == 'TIME' and 'duration' in kwargs :
+      duration = long(kwargs['duration'])
+      _jduration = gateway.jvm.Duration(duration)
+      _jwindow = gateway.jvm.WindowOption.TimeWindows(_jduration)
+
+    elif kwargs['window'] == 'SLIDING' and 'duration' in kwargs and 'sliding_time' in kwargs:
+      duration = long(kwargs['duration'])
+      sliding_time = long(kwargs['sliding_time'])
+      _jduration = gateway.jvm.Duration(duration)
+      _jslideby = gateway.jvm.Duration(sliding_time)
+      _jwindow = gateway.jvm.SlidingTimeWindows(_jduration,_jslideby)
+
+    elif kwargs['window'] == 'SESSION' and 'mingap' in kwargs:
+      mingap = long(kwargs['mingap'])
+      _jmingap = gateway.jvm.Duration(mingap)
+      _jwindow = gateway.jvm.SessionWindows(_jmingap)
+
+    _jtrigger= None
+    if 'trigger' in kwargs:
+      from pyapex.functions.window import TriggerOption
+      if isinstance(kwargs['trigger'], TriggerOption ):
+          _jtrigger = TriggerOption.get_java_trigger_options(kwargs['trigger'],gateway)
+      else:
+          raise Exception("Incorrect Trigger Option")
+      from pyapex.functions.window import TriggerOption
+    _jallowed_lateness= None
+    if 'allowed_lateness' in kwargs:
+      _jallowed_lateness = gateway.jvm.Duration( long(kwargs['allowed_lateness']))
+    self.java_streaming_app = self.java_streaming_app.window(_jwindow,_jtrigger,_jallowed_lateness)
     return self
 
   def count(self,count="counter"):

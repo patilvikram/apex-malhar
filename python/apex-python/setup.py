@@ -15,7 +15,7 @@ setup(
     version = "0.0.4",
     description = ("Python Source code for Apache Apex"),
     license = "Apache License 2.0",
-    packages=['pyapex','pyapex.runtime'],
+    packages=['pyapex','pyapex.runtime','pyapex.functions'],
     package_dir={"": "src"},
     long_description=read('README'),
     python_requires='~=2.7',
