@@ -58,11 +58,6 @@ public class PythonWorkerProxyTest
       return tuple;
     }
 
-    @Override
-    public boolean setState(Map map)
-    {
-      return false;
-    }
   }
 
   @Test

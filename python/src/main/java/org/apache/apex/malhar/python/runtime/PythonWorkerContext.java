@@ -57,30 +57,14 @@ public class PythonWorkerContext implements Serializable
   public void setup()
   {
     LOG.info("Setting up worker context: {}", this);
-    File py4jDependencyFile = new File("./" + PY4J_SRC_ZIP_FILE_NAME);
-    File pythonApexSrcZip = new File("./" + PYTHON_APEX_ZIP_NAME);
-    List<String> dependencyFilePaths = new ArrayList<String>();
-    dependencyFilePaths.add(py4jDependencyFile.getAbsolutePath());
-    dependencyFilePaths.add(pythonApexSrcZip.getAbsolutePath());
-
-    pythonEnvPath = System.getenv(ENV_VAR_PYTHONPATH);
-
-    LOG.info("Found python environment path: {}", pythonEnvPath);
-    if (pythonEnvPath != null) {
-      dependencyFilePaths.add(pythonEnvPath);
-      pythonEnvPath = StringUtils.join(dependencyFilePaths, ":");
-    } else {
-      pythonEnvPath = StringUtils.join(dependencyFilePaths, ":");
-    }
     LOG.debug("Final python environment path with Py4j depenency path: {}", pythonEnvPath);
-    LOG.info("FINAL DEPENDENCY PATH: {}", StringUtils.join(dependencyFilePaths, ":"));
 
     if ((this.apexSourcePath = environmentData.get(PYTHON_APEX_PATH)) == null) {
-      this.apexSourcePath = pythonApexSrcZip.getAbsolutePath();
+      this.apexSourcePath = new File("./" + PYTHON_APEX_ZIP_NAME).getAbsolutePath();
     }
 
     if ((this.py4jDependencyPath = environmentData.get(PY4J_DEPENDENCY_PATH)) == null) {
-      this.py4jDependencyPath = py4jDependencyFile.getAbsolutePath();
+      this.py4jDependencyPath = new File("./" + PY4J_SRC_ZIP_FILE_NAME).getAbsolutePath();
     }
 
     LOG.info("FINAL WORKER PATH: {}", environmentData.get(PYTHON_WORKER_PATH));
@@ -89,6 +73,18 @@ public class PythonWorkerContext implements Serializable
       this.workerFilePath = pythonWorkerFile.getAbsolutePath();
     }
 
+    List<String> dependencyFilePaths = new ArrayList<String>();
+    dependencyFilePaths.add(this.apexSourcePath);
+    dependencyFilePaths.add(this.py4jDependencyPath);
+
+    pythonEnvPath = System.getenv(ENV_VAR_PYTHONPATH);
+    LOG.info("Found python environment path: {}", pythonEnvPath);
+    if (pythonEnvPath != null) {
+      dependencyFilePaths.add(pythonEnvPath);
+      pythonEnvPath = StringUtils.join(dependencyFilePaths, ":");
+    } else {
+      pythonEnvPath = StringUtils.join(dependencyFilePaths, ":");
+    }
     LOG.info("Python dependency Path {} worker Path {}", this.py4jDependencyPath, this.workerFilePath);
   }
 

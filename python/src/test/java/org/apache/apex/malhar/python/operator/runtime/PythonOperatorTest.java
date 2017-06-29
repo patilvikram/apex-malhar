@@ -119,10 +119,12 @@ public class PythonOperatorTest
 
     final String cwd = System.getProperty("user.dir");
     String pythonRuntimeDirectory = cwd + "/../python/apex-python/src/pyapex/runtime";
+    String pythonDepsDirectory = cwd + "/../python/apex-python/deps";
+
     LOG.debug("Current working directory:" + pythonRuntimeDirectory);
     environmentData.put(PythonWorkerContext.PYTHON_WORKER_PATH, pythonRuntimeDirectory + "/" + PythonConstants.PYTHON_WORKER_FILE_NAME);
-    environmentData.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, pythonRuntimeDirectory + "/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
-    environmentData.put(PythonWorkerContext.PYTHON_APEX_PATH, pythonRuntimeDirectory + "/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
+    environmentData.put(PythonWorkerContext.PY4J_DEPENDENCY_PATH, pythonDepsDirectory + "/" + PythonConstants.PY4J_SRC_ZIP_FILE_NAME);
+    environmentData.put(PythonWorkerContext.PYTHON_APEX_PATH, pythonDepsDirectory + "/" + PythonConstants.PYTHON_APEX_ZIP_NAME);
     PythonMapOperator<Integer> mapOperator = new PythonMapOperator<Integer>(decoded);
     mapOperator.getServer().setPythonOperatorEnv(environmentData);
 
