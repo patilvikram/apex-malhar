@@ -131,8 +131,3 @@ class CountTrigger(Trigger):
   def __init__(self, trigger_type, count):
     super(CountTrigger, self).__init__(trigger_type)
     self.count = count
-
-
-
-
-
