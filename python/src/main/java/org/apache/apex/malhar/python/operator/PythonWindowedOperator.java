@@ -32,7 +32,7 @@ public class PythonWindowedOperator<T> extends WindowedOperatorImpl
 {
 
   private static final Logger LOG = LoggerFactory.getLogger(PythonWindowedOperator.class);
-  private PythonServer server = null;
+  private transient PythonServer server = null;
   protected byte[] serializedFunction = null;
   protected transient PythonConstants.OpType operationType = null;
   public PythonWindowedOperator()

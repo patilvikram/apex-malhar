@@ -34,7 +34,7 @@ public abstract class PythonGenericOperator<T> extends BaseOperator
 {
   private static final Logger LOG = LoggerFactory.getLogger(PythonGenericOperator.class);
   protected byte[] serializedFunction = null;
-  private PythonServer server = null;
+  private transient PythonServer server = null;
   protected transient PythonConstants.OpType operationType = null;
 
   public final transient DefaultInputPort<T> in = new DefaultInputPort<T>()
