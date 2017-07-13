@@ -27,18 +27,11 @@ with open( input_data, "r") as outfile:
     for line in outfile:
 	data.append(line)
 
-def filter_func(a):
-  input_data=a.split(",")
-  if float(input_data[2])> 30:
-     return True
-  return False
-
-
 from pyapex import createApp
 
 def filter_func(a):
   input_data=a.split(",")
-  if float(input_data[2])> 30:
+  if float(input_data[2])> 45:
      return True
   return False
 

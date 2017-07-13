@@ -31,11 +31,7 @@ with open( input_data, "r") as outfile:
 
 
 from pyapex import createApp
-from pyapex.functions import ReduceFunction
 from pyapex.functions.window import TriggerType,Trigger,TriggerOption
-class MyReduceFunction(ReduceFunction):
-    def reduce(self, ip1, ip2):
-        return ip1+ip2
 
 t=TriggerOption.at_watermark()
 t.firingOnlyUpdatedPanes()
